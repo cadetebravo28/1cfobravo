@@ -813,7 +813,7 @@ a.wa:hover{border-color:rgba(255,255,255,.2)}
 .foto-msg{font-size:13px;color:var(--muted);padding:8px 12px;border-radius:8px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
 .foto-msg.ok{color:var(--ok);border-color:rgba(52,211,153,.35)}
 .mb.dono{cursor:pointer}
-.wl-foto::after{display:none!important}.wl-foto{cursor:default!important}</style>
+</style>
 
 <div class="chooser" id="chooser" hidden role="dialog" aria-modal="true" aria-labelledby="ch-t">
   <div class="ch-box">
@@ -1813,7 +1813,7 @@ function renderAlerts(){
   document.getElementById("wl-k").textContent=sauda+(me?",":"");
   document.getElementById("wl-n").textContent=me?`Cadete ${me.guerra}`:`Bem-vindo ao Aloja ${ALOJA}`;
   document.getElementById("wl-s").textContent=`${me?`Aloja ${ALOJA} · nº ${me.nr} · `:""}${dl.charAt(0).toUpperCase()+dl.slice(1)}`;
-  { const av=document.getElementById("wl-av"); av.textContent=me?ini2(me.nome):ALOJA; if(me) av.dataset.foto=me.nr; else delete av.dataset.foto; av.disabled=true; av.title=""; }
+  { const av=document.getElementById("wl-av"); av.textContent=me?ini2(me.nome):ALOJA; if(me) av.dataset.foto=me.nr; else delete av.dataset.foto; av.disabled=!me; av.title=me?"Toque para colocar ou trocar sua foto":""; }
   document.getElementById("wl-sw").textContent=me?"Não é você? Trocar":"Identificar-me";
   if(!me){ out.push(W("gold","user",`<b>Identifique-se</b> para ver seu próximo serviço, sua faxina e seus avisos.`)); }
   else {
@@ -2116,7 +2116,7 @@ function watchEscala(){
 
 /* ===== Fotos de perfil ===== */
 const FOTOS={}; let FOTO_DONO=false, FOTO_ALVO=null;
-try{ const lf=JSON.parse(localStorage.getItem("fotos_locais")||"{}");  }catch(e){}
+try{ const lf=JSON.parse(localStorage.getItem("fotos_locais")||"{}"); Object.assign(FOTOS,lf); }catch(e){}
 function aplicaFotos(root){
   (root||document).querySelectorAll("[data-foto]").forEach(el=>{ const f=FOTOS[el.dataset.foto];
     if(f){ el.style.backgroundImage=`url("${f}")`; el.classList.add("tem-foto"); } else { el.style.backgroundImage=""; el.classList.remove("tem-foto"); } });
@@ -2132,12 +2132,12 @@ async function salvaFoto(nr,url){
   fotoMsg("A foto ficou salva só neste aparelho. Para todos verem, mande a foto para o Retexin colocar pelo portal.");
 }
 document.addEventListener("click",e=>{
-  const av=e.target.closest&&e.target.closest("#wl-av"); if(false){ FOTO_ALVO=EU; document.getElementById("foto-in").click(); }
+  const av=e.target.closest&&e.target.closest("#wl-av"); if(av&&!av.disabled&&EU){ FOTO_ALVO=EU; document.getElementById("foto-in").click(); }
   const mb=FOTO_DONO&&e.target.closest&&e.target.closest("#st-row .mb"); if(mb){ FOTO_ALVO=+mb.dataset.nr; document.getElementById("foto-in").click(); }
 });
 document.addEventListener("change",async e=>{ if(e.target.id!=="foto-in") return; const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f||!FOTO_ALVO) return;
   try{ const url=await reduzFoto(f); await salvaFoto(FOTO_ALVO,url); }catch(err){ fotoMsg("Não consegui abrir essa imagem. Tente outra foto."); } });
-async function iniciaFotos(){ return;
+async function iniciaFotos(){
   if(!DB) return;
   try{ const u=await window.claude.use("user"); FOTO_DONO=!!(u&&await u.isOwner()); }catch(e){}
   if(FOTO_DONO){ document.querySelectorAll("#st-row .mb").forEach(b=>b.classList.add("dono")); }
