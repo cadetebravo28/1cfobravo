@@ -1,7 +1,10 @@
 /* CFOBRAVO · service worker
    Sempre busca a versão mais nova na internet (tempo real) e guarda uma cópia
    para abrir sem sinal com os últimos dados. */
-const CACHE = 'cfobravo-v3';
+// notificações (OneSignal); sem sinal, o app continua funcionando
+try { importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) {}
+
+const CACHE = 'cfobravo-v4';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {

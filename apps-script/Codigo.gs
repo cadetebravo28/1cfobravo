@@ -220,6 +220,7 @@ function novoPost(b) {
               img: salvaImagem(b.img, id), th: salvaImagem(b.th, id + '_th'), reac: {}, com: [] };
   const lock = LockService.getScriptLock(); lock.waitLock(10000);
   try { grava('posts', id, d); } finally { lock.releaseLock(); }
+  avisaPelotao('post', b.nr, d);
   return { ok: true, post: d };
 }
 function editaPost(id, fn) {
@@ -229,12 +230,16 @@ function editaPost(id, fn) {
 }
 function reagir(b) {
   exigePin(b); const emo = ['❤️', '👍', '🔥', '😂', '💪'].indexOf(b.emo) >= 0 ? b.emo : null; if (!emo) throw new Error('Reação inválida.');
-  const nr = String(b.nr);
-  return { ok: true, post: editaPost(String(b.id), d => { d.reac = d.reac || {}; const l = d.reac[emo] || []; const i = l.indexOf(nr); d.rt = d.rt || {}; if (i >= 0) { l.splice(i, 1); delete d.rt[nr + emo]; } else { l.push(nr); d.rt[nr + emo] = Date.now(); } d.reac[emo] = l; }) };
+  const nr = String(b.nr); let novo = false;
+  const p = editaPost(String(b.id), d => { d.reac = d.reac || {}; const l = d.reac[emo] || []; const i = l.indexOf(nr); d.rt = d.rt || {}; if (i >= 0) { l.splice(i, 1); delete d.rt[nr + emo]; } else { l.push(nr); d.rt[nr + emo] = Date.now(); novo = true; } d.reac[emo] = l; });
+  if (novo) avisaPelotao('reac', nr, p, emo);
+  return { ok: true, post: p };
 }
 function comentar(b) {
   exigePin(b); const t = txt(b.texto, 300); if (!t) throw new Error('Comentário vazio.');
-  return { ok: true, post: editaPost(String(b.id), d => { d.com = (d.com || []).concat([{ id: novoId('c'), t: Date.now(), nr: String(b.nr), texto: t }]).slice(-80); }) };
+  const p = editaPost(String(b.id), d => { d.com = (d.com || []).concat([{ id: novoId('c'), t: Date.now(), nr: String(b.nr), texto: t }]).slice(-80); });
+  avisaPelotao('com', b.nr, p, t);
+  return { ok: true, post: p };
 }
 function apagar(b) {
   const adm = String(b.admin || '') === ADMIN;
@@ -372,3 +377,128 @@ function lerAtividades(nr) {
   return { atividades: ev.sort((a, b) => b.t - a.t).slice(0, 60) };
 }
 function lerPost(id) { const x = linhas('posts').find(r => r.id === String(id)); return x ? x.d : null; }
+
+// =====================================================================
+//  NOTIFICAÇÕES NO CELULAR (OneSignal) — cada militar recebe as suas
+//  1) Rode uma vez a função  instalarNotificacoes  (menu ▶ Executar) e autorize.
+//  2) Para testar só no seu celular: rode  testeNotificacao .
+// =====================================================================
+const OS_APP = 'cb58e6e8-bfd1-4dab-a056-2f589d36b902';
+const OS_KEY = 'COLE_AQUI_A_REST_API_KEY_DO_ONESIGNAL';
+const SITE = 'https://cadetebravo28.github.io/1cfobravo/';
+const TESTE_NR = '1023';
+const MIL = {'1012':['Camila',1],'1039':['Rebecca',1],'1022':['Fernanda',1],'1050':['Ana Paula',1],'1033':['Paola',1],'1044':['Semtchuk',1],'1042':['Martini',1],'1040':['Kikuchi',7],'1052':['Moreira',7],'1053':['Henrique Cruz',7],'1027':['Parreiral',7],'1002':['Alef',7],'1006':['Bonfim',7],'1021':['Gallego',7],'1023':['Retexin',8],'1047':['Chepiloski',8],'1016':['Douglas',8],'1025':['Gerlach',8],'1004':['Rocha',8],'1018':['Spak',8],'1011':['Stelmack',8],'1009':['André',8],'1036':['Machado',9],'1032':['Schumacher',9],'1038':['Mezzadri',9],'1045':['Sluminski',9],'1046':['Ronqui',9],'1031':['Gorri',9],'1014':['Hartemann',9],'1049':['Keven',9]};   // nº: [nome de guerra, alojamento]
+const FAX8 = {"2026-11-03":"Retexin","2026-11-04":"Chepiloski","2026-11-05":"Gerlach","2026-11-06":"Spak","2026-11-09":"Retexin","2026-11-10":"Chepiloski","2026-11-11":"Gerlach","2026-11-12":"Spak","2026-11-13":"Douglas","2026-11-16":"Retexin","2026-11-17":"Chepiloski","2026-11-18":"Gerlach","2026-11-19":"Spak","2026-11-23":"Douglas","2026-11-24":"Stelmack","2026-11-25":"Retexin","2026-11-26":"Chepiloski","2026-11-27":"Gerlach","2026-11-30":"Spak"};
+const FAX1 = {"2026-11-03": "Semtchuk", "2026-11-04": "Martini", "2026-11-05": "Semtchuk", "2026-11-06": "Martini", "2026-11-09": "Camila", "2026-11-10": "Rebecca", "2026-11-11": "Fernanda", "2026-11-12": "Ana Paula", "2026-11-13": "Paola", "2026-11-16": "Fernanda", "2026-11-17": "Ana Paula", "2026-11-18": "Camila", "2026-11-19": "Paola", "2026-11-23": "Martini", "2026-11-24": "Camila", "2026-11-25": "Semtchuk", "2026-11-26": "Martini", "2026-11-27": "Fernanda", "2026-11-30": "Paola"};
+const JAQUETA = 15;   // mínima abaixo disso: jaqueta
+
+function pushReq(nrs, titulo, texto, url) {
+  nrs = (nrs || []).map(String).filter(n => MIL[n]); if (!nrs.length) return null;
+  return { url: 'https://api.onesignal.com/notifications?c=push', method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { Authorization: 'Key ' + OS_KEY },
+    payload: JSON.stringify({ app_id: OS_APP, target_channel: 'push', include_aliases: { external_id: nrs },
+      headings: { en: titulo, pt: titulo }, contents: { en: texto, pt: texto }, url: url || SITE, chrome_web_icon: SITE + 'icon-192.png', ttl: 6 * 3600 }) };
+}
+function push(nrs, titulo, texto, url) { const r = pushReq(nrs, titulo, texto, url); if (!r) return; try { UrlFetchApp.fetch(r.url, r); } catch (e) {} }
+function pushVarios(lista) { const rs = lista.filter(Boolean); for (let i = 0; i < rs.length; i += 20) { try { UrlFetchApp.fetchAll(rs.slice(i, i + 20)); } catch (e) {} } }
+const nomeMil = nr => (MIL[String(nr)] || ['Alguém'])[0];
+
+function chaveDia(desloc) { const d = new Date(Date.now() + (desloc || 0) * 864e5); return Utilities.formatDate(d, 'America/Sao_Paulo', 'yyyy-MM-dd'); }
+function rotuloDia(k) { const [y, m, d] = k.split('-').map(Number); const dt = new Date(Date.UTC(y, m - 1, d, 15));
+  return ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'][dt.getUTCDay()] + ', ' + String(d).padStart(2, '0') + '/' + String(m).padStart(2, '0'); }
+const p2 = n => String(n).padStart(2, '0');
+
+// Escala de serviço: { nº: 'GBM' } no dia
+function servicosDoDia(k) {
+  const v = lerFonte('escala').values || []; const hdr = v[0] || []; let y = 2026, pm = 0, col = -1;
+  for (let c = 3; c < hdr.length; c++) {
+    const m = String(hdr[c] || '').match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/); if (!m) continue;
+    const mo = +m[2]; if (m[3]) y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; else if (pm && mo < pm) y++; pm = mo;
+    if (y + '-' + p2(mo) + '-' + p2(+m[1]) === k) { col = c; break; }
+  }
+  const out = {}; if (col < 0) return out;
+  for (let r = 1; r < v.length; r++) { const nr = String(parseInt(v[r][0], 10) || ''); if (!MIL[nr]) continue;
+    const c = String(v[r][col] || '').trim().toUpperCase(); if (c && c !== '-' && c !== '–' && c !== 'B') out[nr] = c; }
+  return out;
+}
+function nomeServico(c) { const chefe = /^C(?=GBM|SOB)/.test(c); const b = c.replace(/^C(?=GBM|SOB)/, '');
+  const n = { GBM: 'Guarnição GBM', GBMV: 'Guarnição Vermelha (GBMV)', SOB: 'Sobreaviso', SOBV: 'Sobreaviso Vermelho' }[b] || c;
+  return n + (chefe ? ' · chefe' : ''); }
+// Faxina: { nº: true } no dia
+function faxinaDoDia(k) {
+  const out = {}; const marca = (g, a) => Object.keys(MIL).forEach(n => { if (MIL[n][1] === a && MIL[n][0].toLowerCase() === String(g).toLowerCase()) out[n] = true; });
+  if (FAX8[k]) marca(FAX8[k], 8); if (FAX1[k]) marca(FAX1[k], 1);
+  try { (lerFonte('fax9').values || []).slice(1).forEach(r => { const d = String(r[0] || '').match(/(\d{1,2})\/(\d{1,2})/); if (!d) return;
+    if ('2026-' + p2(+d[2]) + '-' + p2(+d[1]) === k) { marca(String(r[1] || '').trim(), 9); const t = String(r[2] || '').trim(); if (t) marca(t, 9); } }); } catch (e) {}
+  return out;
+}
+// Aulas do dia (mesmas para todos)
+function aulasDia(k) {
+  let rows = [];
+  try { rows = (lerFonte('marc').values || []).map(r => { const d = String(r[0] || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    return d ? { k: d[3] + '-' + p2(+d[2]) + '-' + p2(+d[1]), ini: String(r[1] || ''), sg: String(r[3] || '').trim(), obs: String(r[4] || '').trim() } : null; })
+    .filter(r => r && r.k === k && r.sg).sort((a, b) => a.ini.localeCompare(b.ini)); } catch (e) {}
+  const prova = rows.find(r => /prova|avalia|\bv\.?a\.?\b|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico/i.test(r.obs + ' ' + r.sg));
+  const sig = []; rows.forEach(r => { if (sig.indexOf(r.sg) < 0) sig.push(r.sg); });
+  return { primeira: rows[0] || null, prova: prova || null, sig: sig };
+}
+function climaDia(k) {
+  try { const j = JSON.parse(UrlFetchApp.fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.535&longitude=-49.206&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=3').getContentText());
+    const i = j.daily.time.indexOf(k); if (i < 0) return null;
+    return { min: Math.round(j.daily.temperature_2m_min[i]), max: Math.round(j.daily.temperature_2m_max[i]), chuva: j.daily.precipitation_probability_max[i] }; } catch (e) { return null; }
+}
+
+// 20h: o que cada um tem amanhã
+function avisoVespera() {
+  const k = chaveDia(1); const sv = servicosDoDia(k), fx = faxinaDoDia(k), au = aulasDia(k), cl = climaDia(k);
+  const comum = [];
+  if (au.primeira) comum.push('📚 1ª aula ' + au.primeira.ini + ' · ' + au.sig.join(', '));
+  if (au.prova) comum.push('📝 Avaliação: ' + au.prova.sg + (au.prova.obs ? ' · ' + au.prova.obs : ''));
+  if (cl) comum.push(cl.min < JAQUETA ? '🧥 Leve a jaqueta: mínima ' + cl.min + '°' : '👕 Sem jaqueta: ' + cl.min + '° a ' + cl.max + '°' + (cl.chuva >= 60 ? ' · ☔ chuva ' + cl.chuva + '%' : ''));
+  const reqs = Object.keys(MIL).map(nr => {
+    const l = [];
+    if (sv[nr]) l.push('🔥 Serviço: ' + nomeServico(sv[nr]));
+    if (fx[nr]) l.push('🧹 Faxina do Aloja ' + MIL[nr][1]);
+    const tudo = l.concat(comum); if (!tudo.length) return null;
+    const tit = (sv[nr] ? '🔥 Amanhã você está de serviço' : fx[nr] ? '🧹 Amanhã é sua faxina' : 'Amanhã') + ' · ' + rotuloDia(k);
+    return pushReq([nr], tit, tudo.join('\n'), SITE + '#dia');
+  });
+  pushVarios(reqs);
+}
+// 5h30: lembrete de hoje só para quem tem serviço ou faxina
+function avisoManha() {
+  const k = chaveDia(0); const sv = servicosDoDia(k), fx = faxinaDoDia(k);
+  pushVarios(Object.keys(MIL).map(nr => {
+    if (!sv[nr] && !fx[nr]) return null;
+    const l = []; if (sv[nr]) l.push('🔥 Serviço hoje: ' + nomeServico(sv[nr])); if (fx[nr]) l.push('🧹 Hoje é sua faxina do Aloja ' + MIL[nr][1]);
+    return pushReq([nr], 'Bom dia, Cadete ' + MIL[nr][0] + '!', l.join('\n'), SITE + '#painel');
+  }));
+}
+function instalarNotificacoes() {
+  ScriptApp.getProjectTriggers().forEach(t => { if (['avisoVespera', 'avisoManha'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('avisoVespera').timeBased().everyDays(1).atHour(20).nearMinute(0).inTimezone('America/Sao_Paulo').create();
+  ScriptApp.newTrigger('avisoManha').timeBased().everyDays(1).atHour(5).nearMinute(30).inTimezone('America/Sao_Paulo').create();
+  Logger.log('Pronto: avisos às 20h e às 5h30 todos os dias.');
+}
+function testeNotificacao() {
+  const r = pushReq([TESTE_NR], '🔔 Teste do CFOBRAVO', 'Se chegou, as notificações estão funcionando!', SITE);
+  const res = UrlFetchApp.fetch(r.url, r); Logger.log(res.getContentText());
+}
+function testeVesperaSoEu() {   // mostra no registro o que cada um receberia amanhã e manda o seu
+  const k = chaveDia(1); Logger.log(JSON.stringify({ dia: k, servico: servicosDoDia(k), faxina: faxinaDoDia(k), aulas: aulasDia(k), clima: climaDia(k) }));
+}
+
+// Pelotão: curtidas, comentários e marcações
+function mencoes(t) { const s = {}; String(t || '').replace(/@(1\d{3})\b/g, (m, nr) => { s[nr] = 1; }); return Object.keys(s); }
+function avisaPelotao(tipo, de, post, extra) {
+  try {
+    const url = SITE + '#mural'; const nome = nomeMil(de); const reqs = [];
+    if (tipo === 'reac' && post.nr !== String(de)) reqs.push(pushReq([post.nr], 'Pelotão', extra === '❤️' ? '❤️ ' + nome + ' curtiu sua publicação.' : extra + ' ' + nome + ' reagiu à sua publicação.', url));
+    if (tipo === 'com') {
+      if (post.nr !== String(de)) reqs.push(pushReq([post.nr], 'Pelotão', '💬 ' + nome + ' comentou: ' + String(extra).replace(/@(1\d{3})\b/g, (m, n) => MIL[n] ? '@' + MIL[n][0] : m), url));
+      reqs.push(pushReq(mencoes(extra).filter(n => n !== String(de) && n !== post.nr), 'Pelotão', '🏷️ ' + nome + ' marcou você num comentário.', url));
+    }
+    if (tipo === 'post') reqs.push(pushReq(mencoes(post.texto).filter(n => n !== String(de)), 'Pelotão', '🏷️ ' + nome + ' marcou você numa publicação.', url));
+    pushVarios(reqs);
+  } catch (e) {}
+}
