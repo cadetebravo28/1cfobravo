@@ -3126,7 +3126,7 @@ nav.tabs a[data-v="mural"]{position:relative}
   const b=document.getElementById("wl-notif"); if(!b) return;
   const temPush="Notification" in window && "serviceWorker" in navigator && "PushManager" in window;
   const ios=/iphone|ipad|ipod/i.test(navigator.userAgent), instalado=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
-  let OS=null;
+  let OS=null, ERRO="";
   function estado(){
     b.hidden=!EU; if(!EU) return;
     b.classList.remove("nt-on","nt-pri");
@@ -3144,7 +3144,8 @@ nav.tabs a[data-v="mural"]{position:relative}
     if(m==="ios") return caixa("Notificações no iPhone","No iPhone, os avisos só chegam com o CFOBRAVO <b>instalado na tela de início</b>:<br>1. No Safari, toque em <b>Compartilhar</b> (□↑).<br>2. <b>Adicionar à Tela de Início</b>.<br>3. Abra pelo ícone e toque aqui de novo.");
     if(m==="sem") return caixa("Notificações","Este navegador não recebe notificações. Use o Chrome no Android ou instale o app.");
     if(m==="neg") return caixa("Notificações bloqueadas","Você bloqueou os avisos deste site. Para liberar: toque no <b>cadeado</b> ao lado do endereço (ou nas configurações do app) → <b>Notificações → Permitir</b>.");
-    if(!OS) return caixa("Notificações","Carregando… tente de novo em alguns segundos. Se continuar, confira a internet.");
+    if(!OS){ b.disabled=true; b.textContent="Carregando…"; for(let i=0;i<24&&!OS&&!ERRO;i++) await new Promise(r=>setTimeout(r,500)); b.disabled=false; estado();
+      if(!OS) return caixa("Notificações",`Não consegui ligar o serviço de notificações.<br><small style="opacity:.75">Detalhe: ${esc(ERRO||(window.OneSignalDeferred&&!window.OneSignal?"o OneSignal não carregou (bloqueador de anúncios, modo econômico de dados ou sem internet)":"tempo esgotado"))}</small><br>Me mande um print desta mensagem.`); }
     if(m==="on"){ const d=caixa("Notificações ativas",`Você recebe, como <b>${esc((MILITARES.find(x=>x.nr===EU)||{}).guerra||"")}</b>:<br>• às 20h, o que tem amanhã: serviço, faxina, jaqueta e 1ª aula;<br>• às 5h30, lembrete se hoje tem serviço ou faxina;<br>• curtidas, comentários e marcações no Pelotão.`,'<button data-off>Desativar</button><button class="pri" data-x>OK</button>');
       d.querySelector("[data-off]").onclick=async()=>{ d.remove(); try{ await OS.User.PushSubscription.optOut(); }catch(e){} estado(); }; return; }
     b.disabled=true; b.textContent="Ativando…";
@@ -3159,10 +3160,10 @@ nav.tabs a[data-v="mural"]{position:relative}
       await o.init({appId:"cb58e6e8-bfd1-4dab-a056-2f589d36b902",serviceWorkerPath:"1cfobravo/sw.js",serviceWorkerParam:{scope:"/1cfobravo/"},notifyButton:{enable:false},welcomeNotification:{disable:true}});
       OS=o; if(Notification.permission==="granted") vincula();
       o.User.PushSubscription.addEventListener("change",estado); o.Notifications.addEventListener("permissionChange",estado);
-    }catch(e){ console.warn("OneSignal",e); }
+    }catch(e){ ERRO=String(e&&e.message||e); console.warn("OneSignal",e); }
     estado();
   });
-  const s=document.createElement("script"); s.src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"; s.defer=true; document.head.appendChild(s);
+  const s=document.createElement("script"); s.src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"; s.defer=true; s.onerror=()=>{ ERRO="o arquivo do OneSignal não baixou (bloqueador de anúncios ou rede)"; }; document.head.appendChild(s);
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
