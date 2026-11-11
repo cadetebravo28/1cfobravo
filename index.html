@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a111b">
+<meta name="theme-color" content="#0a111b"><script>try{var _t=localStorage.getItem("aloja_tema");if(_t==="claro"||_t==="escuro")document.documentElement.setAttribute("data-tema",_t)}catch(e){}</script>
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -3012,6 +3012,107 @@ nav.tabs a[data-v="mural"]{position:relative}
   document.addEventListener("historias-atualizar",atualiza);
   renderBarra(); atualiza(); setInterval(atualiza,40000);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden) atualiza(); });
+})();
+</script>
+
+<style>
+/* ===== Tema claro / escuro ===== */
+:root[data-tema="claro"]{--bg:#eef2f7;--panel:#ffffff;--panel-2:#e6ebf2;--line:#d3dbe6;--fg:#0f1c2e;--muted:#58687d;--ember:#c85a17;--gold:#a87508;--steel:#5d6b7c;--ok:#0b7f55;--vermelha:#c62828;--fire:#c0392b;--fire-2:#c2621f;--khaki:#7a6a45;--navy:#10213a;--navy-2:#cfdbec;color-scheme:light}
+:root[data-tema="claro"] body{background-image:linear-gradient(180deg,rgba(16,33,58,.07),transparent 520px)}
+:root[data-tema="claro"] header.top,:root[data-tema="claro"] .instbar,:root[data-tema="claro"] .minibar,:root[data-tema="claro"] .site-foot,:root[data-tema="claro"] .hsv,:root[data-tema="claro"] .ig-hl{--bg:#0a111b;--panel:#0f1926;--panel-2:#142131;--line:#1f2e42;--fg:#eef1f5;--muted:#8d9bb0;--ember:#ff8f3f;--gold:#e8b84a;--steel:#b8c2cf;--ok:#34d399;--vermelha:#f87171;--khaki:#cbbf9f;--navy:#10213a;--navy-2:#173054;color-scheme:dark;color:var(--fg)}
+:root[data-tema="claro"] nav.tabs{background:rgba(255,255,255,.94)!important;box-shadow:0 1px 0 var(--line)}
+:root[data-tema="claro"] nav.tabs a[aria-current="page"]{color:var(--fg)!important}
+:root[data-tema="claro"] .ring .trk{stroke:rgba(15,28,46,.09)}
+:root[data-tema="claro"] .clock div::before{background:rgba(15,28,46,.09)}
+:root[data-tema="claro"] .tl-bar,:root[data-tema="claro"] .bar,:root[data-tema="claro"] .av-fim .bar,:root[data-tema="claro"] .fu-c .bar,:root[data-tema="claro"] .an-top .tr,:root[data-tema="claro"] .rank-row .track,:root[data-tema="claro"] .em-sems i,:root[data-tema="claro"] .mbar,:root[data-tema="claro"] .an-row .tr{background:rgba(15,28,46,.09)}
+:root[data-tema="claro"] .kpi,:root[data-tema="claro"] .an-top .r:not(.p1),:root[data-tema="claro"] .dd-aula,:root[data-tema="claro"] .am-aulas span,:root[data-tema="claro"] .av-dt,:root[data-tema="claro"] .clock div,:root[data-tema="claro"] .anti-hms div,:root[data-tema="claro"] .stats div,:root[data-tema="claro"] .pill,:root[data-tema="claro"] .obs div,:root[data-tema="claro"] .nm-chip,:root[data-tema="claro"] .prox div,:root[data-tema="claro"] .em-sems div,:root[data-tema="claro"] .an-item,:root[data-tema="claro"] .sv-row,:root[data-tema="claro"] .am-sv span,:root[data-tema="claro"] .wa,:root[data-tema="claro"] .fu-eu,:root[data-tema="claro"] .foto-msg{background:rgba(15,28,46,.045)}
+:root[data-tema="claro"] #me-sel,:root[data-tema="claro"] #esc-q,:root[data-tema="claro"] #em-q,:root[data-tema="claro"] #an-sel{background:var(--panel)}
+:root[data-tema="claro"] .ig-ic button:hover{background:rgba(15,28,46,.09)}
+:root[data-tema="claro"] a.wa:hover{border-color:rgba(15,28,46,.25)}
+:root[data-tema="claro"] .esc thead th.tod{background:#fff1c7;color:#7a5600}
+:root[data-tema="claro"] .esc .tod{background:rgba(232,184,74,.14)}
+:root[data-tema="claro"] .jq.sim,:root[data-tema="claro"] .dd-clima .sim{color:#1d4ed8}
+:root[data-tema="claro"] .jq.nao,:root[data-tema="claro"] .dd-clima .nao{color:#047857}
+:root[data-tema="claro"] .mb.svc small,:root[data-tema="claro"] .fu-eu .pend,:root[data-tema="claro"] .fu-tab td.pd,:root[data-tema="claro"] .ig-err,:root[data-tema="claro"] .mm-err,:root[data-tema="claro"] .lg-err,:root[data-tema="claro"] .wa.red svg{color:#b42318}
+:root[data-tema="claro"] .wa.blue svg{color:#1d4ed8}
+:root[data-tema="claro"] .wa.violet svg{color:#6d28d9}
+:root[data-tema="claro"] .ig-cap .men,:root[data-tema="claro"] .ig-c .men{color:#1d4ed8}
+:root[data-tema="claro"] .ig-cf button,:root[data-tema="claro"] .ig-sh-h button.pub{color:#0b6bcb}
+:root[data-tema="claro"] .ig-at.novo span b:first-child::before{background:#0b6bcb}
+:root[data-tema="claro"] .ig-m{background:var(--panel-2)}
+:root[data-tema="claro"] .gcard.main{box-shadow:0 18px 40px -28px rgba(15,28,46,.35)}
+:root[data-tema="claro"] .gcard,:root[data-tema="claro"] .panel,:root[data-tema="claro"] .ch-box{box-shadow:0 1px 2px rgba(15,28,46,.06)}
+:root[data-tema="claro"] .frase{background:linear-gradient(100deg,rgba(23,48,84,.09),rgba(255,255,255,.7))}
+:root[data-tema="claro"] .welcome{background:linear-gradient(110deg,rgba(23,48,84,.12),var(--panel) 60%)}
+:root[data-tema="claro"] .now{background:linear-gradient(90deg,rgba(11,127,85,.08),transparent 60%)}
+:root[data-tema="claro"] .chip.gold{background:rgba(168,117,8,.08)}
+:root[data-tema="claro"] .ig-pick{box-shadow:0 10px 30px -12px rgba(15,28,46,.5)}
+:root[data-tema="claro"] .ch-box{box-shadow:0 30px 80px -30px rgba(0,0,0,.6)}
+:root[data-tema="claro"] .fbtn[aria-pressed="true"],:root[data-tema="claro"] .an-top .r.p1 .med,:root[data-tema="claro"] .nm-chip .tag{color:#fff}
+@media (prefers-color-scheme: light){
+:root:not([data-tema="escuro"]){--bg:#eef2f7;--panel:#ffffff;--panel-2:#e6ebf2;--line:#d3dbe6;--fg:#0f1c2e;--muted:#58687d;--ember:#c85a17;--gold:#a87508;--steel:#5d6b7c;--ok:#0b7f55;--vermelha:#c62828;--fire:#c0392b;--fire-2:#c2621f;--khaki:#7a6a45;--navy:#10213a;--navy-2:#cfdbec;color-scheme:light}
+:root:not([data-tema="escuro"]) body{background-image:linear-gradient(180deg,rgba(16,33,58,.07),transparent 520px)}
+:root:not([data-tema="escuro"]) header.top,:root:not([data-tema="escuro"]) .instbar,:root:not([data-tema="escuro"]) .minibar,:root:not([data-tema="escuro"]) .site-foot,:root:not([data-tema="escuro"]) .hsv,:root:not([data-tema="escuro"]) .ig-hl{--bg:#0a111b;--panel:#0f1926;--panel-2:#142131;--line:#1f2e42;--fg:#eef1f5;--muted:#8d9bb0;--ember:#ff8f3f;--gold:#e8b84a;--steel:#b8c2cf;--ok:#34d399;--vermelha:#f87171;--khaki:#cbbf9f;--navy:#10213a;--navy-2:#173054;color-scheme:dark;color:var(--fg)}
+:root:not([data-tema="escuro"]) nav.tabs{background:rgba(255,255,255,.94)!important;box-shadow:0 1px 0 var(--line)}
+:root:not([data-tema="escuro"]) nav.tabs a[aria-current="page"]{color:var(--fg)!important}
+:root:not([data-tema="escuro"]) .ring .trk{stroke:rgba(15,28,46,.09)}
+:root:not([data-tema="escuro"]) .clock div::before{background:rgba(15,28,46,.09)}
+:root:not([data-tema="escuro"]) .tl-bar,:root:not([data-tema="escuro"]) .bar,:root:not([data-tema="escuro"]) .av-fim .bar,:root:not([data-tema="escuro"]) .fu-c .bar,:root:not([data-tema="escuro"]) .an-top .tr,:root:not([data-tema="escuro"]) .rank-row .track,:root:not([data-tema="escuro"]) .em-sems i,:root:not([data-tema="escuro"]) .mbar,:root:not([data-tema="escuro"]) .an-row .tr{background:rgba(15,28,46,.09)}
+:root:not([data-tema="escuro"]) .kpi,:root:not([data-tema="escuro"]) .an-top .r:not(.p1),:root:not([data-tema="escuro"]) .dd-aula,:root:not([data-tema="escuro"]) .am-aulas span,:root:not([data-tema="escuro"]) .av-dt,:root:not([data-tema="escuro"]) .clock div,:root:not([data-tema="escuro"]) .anti-hms div,:root:not([data-tema="escuro"]) .stats div,:root:not([data-tema="escuro"]) .pill,:root:not([data-tema="escuro"]) .obs div,:root:not([data-tema="escuro"]) .nm-chip,:root:not([data-tema="escuro"]) .prox div,:root:not([data-tema="escuro"]) .em-sems div,:root:not([data-tema="escuro"]) .an-item,:root:not([data-tema="escuro"]) .sv-row,:root:not([data-tema="escuro"]) .am-sv span,:root:not([data-tema="escuro"]) .wa,:root:not([data-tema="escuro"]) .fu-eu,:root:not([data-tema="escuro"]) .foto-msg{background:rgba(15,28,46,.045)}
+:root:not([data-tema="escuro"]) #me-sel,:root:not([data-tema="escuro"]) #esc-q,:root:not([data-tema="escuro"]) #em-q,:root:not([data-tema="escuro"]) #an-sel{background:var(--panel)}
+:root:not([data-tema="escuro"]) .ig-ic button:hover{background:rgba(15,28,46,.09)}
+:root:not([data-tema="escuro"]) a.wa:hover{border-color:rgba(15,28,46,.25)}
+:root:not([data-tema="escuro"]) .esc thead th.tod{background:#fff1c7;color:#7a5600}
+:root:not([data-tema="escuro"]) .esc .tod{background:rgba(232,184,74,.14)}
+:root:not([data-tema="escuro"]) .jq.sim,:root:not([data-tema="escuro"]) .dd-clima .sim{color:#1d4ed8}
+:root:not([data-tema="escuro"]) .jq.nao,:root:not([data-tema="escuro"]) .dd-clima .nao{color:#047857}
+:root:not([data-tema="escuro"]) .mb.svc small,:root:not([data-tema="escuro"]) .fu-eu .pend,:root:not([data-tema="escuro"]) .fu-tab td.pd,:root:not([data-tema="escuro"]) .ig-err,:root:not([data-tema="escuro"]) .mm-err,:root:not([data-tema="escuro"]) .lg-err,:root:not([data-tema="escuro"]) .wa.red svg{color:#b42318}
+:root:not([data-tema="escuro"]) .wa.blue svg{color:#1d4ed8}
+:root:not([data-tema="escuro"]) .wa.violet svg{color:#6d28d9}
+:root:not([data-tema="escuro"]) .ig-cap .men,:root:not([data-tema="escuro"]) .ig-c .men{color:#1d4ed8}
+:root:not([data-tema="escuro"]) .ig-cf button,:root:not([data-tema="escuro"]) .ig-sh-h button.pub{color:#0b6bcb}
+:root:not([data-tema="escuro"]) .ig-at.novo span b:first-child::before{background:#0b6bcb}
+:root:not([data-tema="escuro"]) .ig-m{background:var(--panel-2)}
+:root:not([data-tema="escuro"]) .gcard.main{box-shadow:0 18px 40px -28px rgba(15,28,46,.35)}
+:root:not([data-tema="escuro"]) .gcard,:root:not([data-tema="escuro"]) .panel,:root:not([data-tema="escuro"]) .ch-box{box-shadow:0 1px 2px rgba(15,28,46,.06)}
+:root:not([data-tema="escuro"]) .frase{background:linear-gradient(100deg,rgba(23,48,84,.09),rgba(255,255,255,.7))}
+:root:not([data-tema="escuro"]) .welcome{background:linear-gradient(110deg,rgba(23,48,84,.12),var(--panel) 60%)}
+:root:not([data-tema="escuro"]) .now{background:linear-gradient(90deg,rgba(11,127,85,.08),transparent 60%)}
+:root:not([data-tema="escuro"]) .chip.gold{background:rgba(168,117,8,.08)}
+:root:not([data-tema="escuro"]) .ig-pick{box-shadow:0 10px 30px -12px rgba(15,28,46,.5)}
+:root:not([data-tema="escuro"]) .ch-box{box-shadow:0 30px 80px -30px rgba(0,0,0,.6)}
+:root:not([data-tema="escuro"]) .fbtn[aria-pressed="true"],:root:not([data-tema="escuro"]) .an-top .r.p1 .med,:root:not([data-tema="escuro"]) .nm-chip .tag{color:#fff}
+}
+.ib-tema{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:#dbe4f0;border-radius:4px;width:34px;height:31px;display:grid;place-items:center;cursor:pointer;flex:0 0 auto;padding:0}
+.ib-tema svg{width:17px;height:17px}
+.tm-menu{position:fixed;z-index:160;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px;display:grid;min-width:180px;box-shadow:0 14px 40px -12px rgba(0,0,0,.55)}
+.tm-menu button{display:flex;gap:10px;align-items:center;background:none;border:0;color:var(--fg);font:inherit;font-size:14.5px;padding:10px 12px;border-radius:6px;cursor:pointer;text-align:left}
+.tm-menu button:hover{background:var(--panel-2)}
+.tm-menu button[aria-checked="true"]{font-weight:700}
+.tm-menu button[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--gold)}
+</style>
+<script>
+/* ===== Tema: automático (segue o celular), claro ou escuro ===== */
+(function(){
+  const R=document.documentElement, K="aloja_tema";
+  const SOL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>';
+  const LUA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+  const AUTO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>';
+  const atual=()=>{ try{ return localStorage.getItem(K)||"auto"; }catch(e){ return "auto"; } };
+  function aplica(t){ if(t==="claro"||t==="escuro") R.dataset.tema=t; else delete R.dataset.tema; try{ localStorage.setItem(K,t); }catch(e){} icone(); }
+  const b=document.createElement("button"); b.type="button"; b.className="ib-tema"; b.id="ib-tema";
+  function icone(){ const t=atual(); b.innerHTML=t==="claro"?SOL:t==="escuro"?LUA:AUTO; b.setAttribute("aria-label","Tema: "+(t==="auto"?"automático":t)); b.title="Tema: "+(t==="auto"?"automático (segue o celular)":t); }
+  const sw=document.getElementById("troca-aloja"); if(sw){ sw.insertAdjacentElement("afterend",b); b.style.marginLeft="8px"; }
+  icone();
+  b.addEventListener("click",e=>{ e.stopPropagation(); let m=document.querySelector(".tm-menu"); if(m){ m.remove(); return; }
+    m=document.createElement("div"); m.className="tm-menu"; m.setAttribute("role","menu");
+    const t=atual();
+    m.innerHTML=[["auto",AUTO,"Automático"],["claro",SOL,"Claro"],["escuro",LUA,"Escuro"]].map(([k,i,n])=>`<button role="menuitemradio" aria-checked="${t===k}" data-tm="${k}"><span style="width:18px;height:18px;display:grid">${i}</span>${n}</button>`).join("");
+    document.body.appendChild(m); const r=b.getBoundingClientRect();
+    m.style.top=(r.bottom+6)+"px"; m.style.right=Math.max(8,innerWidth-r.right)+"px";
+    m.addEventListener("click",ev=>{ const x=ev.target.closest("[data-tm]"); if(x){ aplica(x.dataset.tm); m.remove(); } });
+    setTimeout(()=>document.addEventListener("click",function f(ev){ if(!m.contains(ev.target)){ m.remove(); document.removeEventListener("click",f); } }),0); });
+  addEventListener("scroll",()=>{ const m=document.querySelector(".tm-menu"); if(m) m.remove(); },{passive:true});
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
