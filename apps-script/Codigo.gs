@@ -35,7 +35,6 @@ function doGet(e) {
     if (p.a === 'login') return json({ ok: true });
     if (p.a === 'v') return json(lerFonte(p.k));
     if (p.a === 'fotos') return json({ fotos: lerFotos() });
-    if (p.a === 'mural') return json(lerMural());
     if (p.a === 'feed') return json(lerFeed(p.antes));
     if (p.a === 'perfil') return json(lerPerfil(p.nr));
     if (p.a === 'img') return json(lerImagem(p.id));
@@ -54,10 +53,8 @@ function doPost(e) {
     if (b.a === 'pin') return json(conferePin(b.nr, b.pin));
     if (b.a === 'post') return json(novoPost(b));
     if (b.a === 'bio') return json(salvaBio(b));
-    if (b.a === 'story') return json(novaHistoria(b));
     if (b.a === 'reagir') return json(reagir(b));
     if (b.a === 'comentar') return json(comentar(b));
-    if (b.a === 'visto') return json(visto(b));
     if (b.a === 'apagar') return json(apagar(b));
     return json({ error: 'ação desconhecida' });
   } catch (err) {
@@ -134,11 +131,9 @@ function json(o) {
 }
 
 // =====================================================================
-//  MURAL DO PELOTÃO + HISTÓRIAS DE 24 H
-//  Dados numa planilha "Portal Aloja · mural" e imagens numa pasta
-//  "Portal Aloja · mídia", ambas criadas sozinhas no seu Drive.
+//  REDE DO PELOTÃO: dados na planilha "Portal Aloja · mural" e fotos
+//  na pasta "Portal Aloja · mídia", criadas sozinhas no seu Drive.
 // =====================================================================
-const DIA_MS = 24 * 3600 * 1000;
 
 function muralSS() {
   const props = PropertiesService.getScriptProperties();
@@ -199,18 +194,6 @@ function conferePin(nr, pin) {
 }
 function exigePin(b) { const r = conferePin(b.nr, b.pin); if (!r.ok) throw new Error(r.erro || 'PIN incorreto.'); }
 
-function lerMural() {
-  const agora = Date.now();
-  // histórias vencidas somem (e a imagem vai para a lixeira)
-  const vivas = [];
-  const lock = LockService.getScriptLock();
-  if (lock.tryLock(5000)) {
-    try { linhas('stories').slice().reverse().forEach(r => { if (agora - r.d.t > DIA_MS) { apagaImagem(r.d.img); aba('stories').deleteRow(r.row); } else vivas.push(r.d); }); }
-    finally { lock.releaseLock(); }
-  } else linhas('stories').forEach(r => { if (agora - r.d.t <= DIA_MS) vivas.push(r.d); });
-  const posts = linhas('posts').map(r => r.d).sort((a, b) => b.t - a.t).slice(0, 60);
-  return { posts: posts, stories: vivas.sort((a, b) => a.t - b.t), agora: agora };
-}
 function novoPost(b) {
   exigePin(b);
   const texto = txt(b.texto, 1000);
@@ -232,14 +215,6 @@ function novoPost(b) {
   try { grava('posts', id, d); } finally { lock.releaseLock(); }
   return { ok: true, post: d };
 }
-function novaHistoria(b) {
-  exigePin(b); if (!b.img) throw new Error('A história precisa de uma foto.');
-  const id = novoId('s');
-  const d = { id: id, t: Date.now(), nr: String(b.nr), aloja: txt(b.aloja, 3), leg: txt(b.leg, 140), img: salvaImagem(b.img, id), vis: [] };
-  const lock = LockService.getScriptLock(); lock.waitLock(10000);
-  try { grava('stories', id, d); } finally { lock.releaseLock(); }
-  return { ok: true, story: d };
-}
 function editaPost(id, fn) {
   const lock = LockService.getScriptLock(); lock.waitLock(10000);
   try { const x = linhas('posts').find(r => r.id === id); if (!x) throw new Error('Post não encontrado.'); fn(x.d); grava('posts', id, x.d); return x.d; }
@@ -253,13 +228,6 @@ function reagir(b) {
 function comentar(b) {
   exigePin(b); const t = txt(b.texto, 300); if (!t) throw new Error('Comentário vazio.');
   return { ok: true, post: editaPost(String(b.id), d => { d.com = (d.com || []).concat([{ id: novoId('c'), t: Date.now(), nr: String(b.nr), texto: t }]).slice(-80); }) };
-}
-function visto(b) {
-  const nr = String(b.nr || ''); if (!/^1\d{3}$/.test(nr)) return { ok: false };
-  const lock = LockService.getScriptLock(); lock.waitLock(10000);
-  try { const x = linhas('stories').find(r => r.id === String(b.id)); if (x && x.d.nr !== nr && (x.d.vis || []).indexOf(nr) < 0) { x.d.vis = (x.d.vis || []).concat([nr]); grava('stories', x.id, x.d); } }
-  finally { lock.releaseLock(); }
-  return { ok: true };
 }
 function apagar(b) {
   const adm = String(b.admin || '') === ADMIN;
