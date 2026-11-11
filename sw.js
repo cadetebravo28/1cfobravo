@@ -4,7 +4,7 @@
 // notificações (OneSignal); sem sinal, o app continua funcionando
 try { importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'); } catch (e) {}
 
-const CACHE = 'cfobravo-v4';
+const CACHE = 'cfobravo-v5';
 const BASE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
@@ -16,7 +16,8 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const req = e.request;
-  if (req.method !== 'GET') return;                       // envio de foto etc.: direto na internet
+  if (req.method !== 'GET') return;
+  if (/\.(m4a|mp3|ogg|wav|aac)$/i.test(new URL(req.url).pathname)) return;   // áudio: direto (o iPhone precisa de Range)
   const url = new URL(req.url);
   const site = url.origin === self.location.origin;
   const api = /script\.google(usercontent)?\.com$/.test(url.hostname) || url.hostname === 'api.open-meteo.com';
