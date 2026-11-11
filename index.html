@@ -3311,7 +3311,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 .welcome{background:none!important;border:0!important;padding:4px 0 0!important;gap:12px!important;overflow:visible}
 .welcome::before{display:none!important}
 .wl-id{gap:12px!important;flex-wrap:nowrap!important}
-.wl-av{width:48px!important;height:48px!important;font-size:15px!important;border:0!important;background:linear-gradient(160deg,#23406b,#132743)!important;color:#eef1f5;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--gold)}
+.wl-av{width:48px!important;height:48px!important;font-size:15px!important;border:0!important;color:#eef1f5;background-size:cover!important;background-position:center!important;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--gold)}
 .wl-k{font-size:12.5px!important;letter-spacing:0!important;text-transform:none!important;color:var(--muted)!important;font-weight:500!important}
 .wl-t h2{font-size:26px!important}
 .v2-dia{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1;flex:0 0 auto;text-align:right}
@@ -3374,9 +3374,13 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 @media (min-width:641px){.rg-l{grid-template-columns:repeat(5,minmax(0,1fr))}.rg-l .x{display:block;text-align:center}.rg-h .d{font-size:40px}}
 #v-painel .p-top{display:none!important}
 /* Aloja hoje */
-.mb .av{border:0!important;width:50px!important;height:50px!important;background:linear-gradient(160deg,#23406b,#132743)!important;color:#eef1f5;box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ring,#1f6b52)!important;background-size:cover!important;background-position:center!important}
-.mb.svc .av{--ring:#c0392b;background:linear-gradient(160deg,#6b231b,#3a1210)!important}
-.mb.fax .av{--ring:#cbbf9f;background:linear-gradient(160deg,#4a4330,#25221a)!important}
+.wl-av:not(.tem-foto){background:linear-gradient(160deg,#23406b,#132743)!important}
+.mb .av:not(.tem-foto){background:linear-gradient(160deg,#23406b,#132743)!important}
+.mb .av{border:0!important;width:50px!important;height:50px!important;color:#eef1f5;box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--ring,#1f6b52)!important;background-size:cover!important;background-position:center!important}
+.mb.svc .av{--ring:#c0392b}
+.mb.svc .av:not(.tem-foto){background:linear-gradient(160deg,#6b231b,#3a1210)!important}
+.mb.fax .av{--ring:#cbbf9f}
+.mb.fax .av:not(.tem-foto){background:linear-gradient(160deg,#4a4330,#25221a)!important}
 .mb.me .av{--ring:#e8b84a}
 .mb.free small{color:#6ee7b7}
 .mb small{font-size:10.5px!important;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
