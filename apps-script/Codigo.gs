@@ -2,12 +2,15 @@
  * API do Portal Aloja (1º CFO BM 2026 · Aspirantes 2028)
  * Lê as planilhas da turma e entrega os dados ao site em JSON.
  * Implantar como App da Web: Executar como "Eu" · Acesso "Qualquer pessoa".
- * Só os intervalos listados em FONTES podem ser lidos (anotações ficam de fora).
+ * Só os intervalos listados em FONTES podem ser lidos, e só com usuário e senha da turma.
  */
+const USUARIO = 'COLOQUE_O_USUARIO';
+const SENHA   = 'COLOQUE_A_SENHA';
 const ESC = '1Fll0Q0Vt--jNqC1awyE2A-7JpKZcUhnpCBy-ghPPH1k';   // Escala Aspirantes 2028
 const CFO = '1I01qBi7HCdUHcmlG5CIbDY3UKjMqlGFrd3cX-fG48e8';   // 1º CFO BM 2026 - BRAVO
 const FX9 = '1qfS_bQqVxjGjfUHP9abjqmwg6pU9F0XgP7adtdvqSkA';   // Faxina Aloja 9
 const FUN = '1K5xIBsUxgcVW48XSGLplXat0OfjCA8JMvf50RnEGr0A';   // Pelotão Bravo (FUNREBRAVO)
+const ANO = '1pThqWbY11CR697tpHBBwmay680qH5hOysHM0VYDjaOc';   // Anotações Cadetes
 
 const FONTES = {
   escala:  { id: ESC, aba: 'Escala',                      linhas: [3, 70] },
@@ -19,11 +22,16 @@ const FONTES = {
   fax9:    { id: FX9, aba: 'FAXINA DIÁRIA',               a1: 'A1:D200' },
   fun:     { id: FUN, aba: 'FUNREBRAVO',                  a1: 'A1:N80' },
   fun_s:   { id: FUN, aba: 'SAÍDAS FUNREBRAVO',           a1: 'A1:H400' },
+  an_resp: { id: ANO, aba: 'Respostas Revisadas',         a1: 'A1:G3000' },
+  an_dados:{ id: ANO, aba: 'Dados',                       a1: 'A1:D400' },
+  an_sem:  { id: ANO, aba: 'Anotações',                   a1: 'A1:F300' },
 };
 
 function doGet(e) {
   const p = (e && e.parameter) || {};
+  if (!autorizado(p.u, p.s)) return json({ error: 'auth' });
   try {
+    if (p.a === 'login') return json({ ok: true });
     if (p.a === 'v') return json(lerFonte(p.k));
     if (p.a === 'fotos') return json({ fotos: lerFotos() });
     return json({ ok: true, fontes: Object.keys(FONTES) });
@@ -35,11 +43,16 @@ function doGet(e) {
 function doPost(e) {
   try {
     const b = JSON.parse(e.postData.contents || '{}');
+    if (!autorizado(b.u, b.s)) return json({ error: 'auth' });
     if (b.a === 'foto') return json(salvarFoto(b.nr, b.img));
     return json({ error: 'ação desconhecida' });
   } catch (err) {
     return json({ error: String(err && err.message || err) });
   }
+}
+
+function autorizado(u, s) {
+  return String(u || '').trim().toLowerCase() === USUARIO.toLowerCase() && String(s || '') === SENHA;
 }
 
 function lerFonte(k) {
