@@ -918,6 +918,10 @@ a.wa:hover{border-color:rgba(255,255,255,.2)}
     <div class="sec-head"><h2>Aloja <span class="aloja-n">8</span> hoje</h2><span class="label" id="st-leg"></span></div>
     <div class="st-row" id="st-row"></div>
   </div>
+  <section class="panel cmd" id="cmd-card" aria-labelledby="cmd-h" hidden>
+    <div class="sec-head"><h2 id="cmd-h">Comando da semana</h2><div class="cmd-nav"><button type="button" id="cmd-ant" aria-label="Semana anterior">‹</button><span id="cmd-per"></span><button type="button" id="cmd-prox" aria-label="Próxima semana">›</button></div></div>
+    <div id="cmd-body"></div>
+  </section>
   <section class="panel aval" aria-labelledby="av-h">
     <div class="sec-head"><h2 id="av-h">Avaliações e avisos</h2><span class="label">próximos 14 dias</span></div>
     <div class="av-grid">
@@ -1854,6 +1858,7 @@ function renderAlerts(){
   // anotação de alguém do alojamento
   if(AN.week){ const nos=AN.week.itens.filter(x=>NOSSOS.has(x.nr)&&x.nr!==EU&&!x.pos); if(nos.length){ const nomes=[...new Set(nos.map(x=>x.nome))];
     out.push(W("","anot",`<b>Aloja ${ALOJA}: ${nos.length} anotação${nos.length>1?"ões":""} na semana</b><small>${esc(nomes.join(", "))}</small>`,"#anot"));} }
+  try{ if(window.alertasComando) out.unshift(...window.alertasComando(EU,W)); }catch(e){}
   document.getElementById("alerts").innerHTML=out.join("");
 }
 function renderMarco(){
@@ -3164,6 +3169,81 @@ nav.tabs a[data-v="mural"]{position:relative}
     estado();
   });
   const s=document.createElement("script"); s.src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"; s.defer=true; s.onerror=()=>{ ERRO="o arquivo do OneSignal não baixou (bloqueador de anúncios ou rede)"; }; document.head.appendChild(s);
+})();
+</script>
+
+<style>
+/* ===== Escala de comando e suplência ===== */
+.cmd .sec-head{flex-wrap:wrap;gap:6px 12px}
+.cmd-nav{display:flex;align-items:center;gap:6px;margin-left:auto}
+.cmd-nav button{background:var(--panel-2);border:1px solid var(--line);color:var(--fg);border-radius:6px;width:32px;height:30px;font:inherit;font-size:16px;cursor:pointer}
+.cmd-nav button:disabled{opacity:.35;cursor:default}
+.cmd-nav span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cmd-seg{display:flex;gap:6px;margin:4px 0 10px}
+.cmd-seg button{flex:1;background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;font:inherit;font-weight:700;font-size:13.5px;padding:8px;cursor:pointer}
+.cmd-seg button[aria-pressed="true"]{background:var(--fire);border-color:var(--fire);color:#fff}
+.cmd-eu{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;border:1px solid color-mix(in srgb,var(--gold) 50%,transparent);background:color-mix(in srgb,var(--gold) 9%,transparent);font-size:14px;margin-bottom:10px}
+.cmd-eu b{color:var(--gold)}
+.cmd-l{display:grid;gap:0}
+.cmd-r{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1fr);gap:4px 12px;align-items:center;padding:9px 4px;border-top:1px solid var(--line)}
+.cmd-r:first-child{border-top:0}
+.cmd-r.hd{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-top:0}
+.cmd-r .fn{font-size:13px;color:var(--muted);font-weight:600;line-height:1.25}
+.cmd-p{display:flex;align-items:center;gap:6px;min-width:0;font-size:14.5px;font-weight:600}
+.cmd-p span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmd-p.vz{color:var(--muted);font-weight:400}
+.cmd-a{flex:0 0 auto;font-size:10.5px;font-weight:800;letter-spacing:.04em;border-radius:4px;padding:1px 5px;border:1px solid var(--line);color:var(--muted)}
+.cmd-a.a3{background:var(--gold);border-color:var(--gold);color:#1a1405}
+.cmd-a.ach{background:color-mix(in srgb,#3b82f6 22%,transparent);border-color:color-mix(in srgb,#3b82f6 45%,transparent);color:var(--fg)}
+.cmd-r.eu{background:color-mix(in srgb,var(--gold) 8%,transparent);border-radius:8px;box-shadow:inset 3px 0 0 var(--gold)}
+.cmd-r.eu .cmd-p.me span{color:var(--gold)}
+.cmd-r.nos .cmd-p.nos span{text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--fire) 60%,transparent);text-underline-offset:3px}
+.cmd-leg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:10px;align-items:center}
+.cmd-busca{width:100%;margin:0 0 8px;background:var(--panel);border:1px solid var(--line);color:var(--fg);border-radius:8px;padding:9px 11px;font:inherit;font-size:15px}
+@media (max-width:640px){
+  .cmd-r{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:2px 10px}
+  .cmd-r .fn{grid-column:1/-1}
+  .cmd-r.hd .fn{display:none}
+}
+</style>
+<script>
+/* ===== Escala de comando e suplência (comando.json no site) ===== */
+(function(){
+  const card=document.getElementById("cmd-card"); if(!card) return;
+  const C={d:null,i:0,cia:0,q:""};
+  const hoje=()=>keyOf(partsSP(nowSP()));
+  const dm=k=>k.slice(8,10)+"/"+k.slice(5,7);
+  const TODOS={}; Object.values(ALOJAS).forEach(l=>l.forEach(m=>TODOS[m.nr]=m));
+  const semAtual=()=>{ const h=hoje(), s=C.d.semanas; let i=s.findIndex(x=>x.ini<=h&&h<x.fim); if(i<0) i=s.findIndex(x=>x.ini<=h&&h<=x.fim); if(i<0){ i=s.findIndex(x=>x.ini>h); if(i<0) i=s.length-1; } return i; };
+  const ano=p=>p.ano==="3"?`<i class="cmd-a a3">3º</i>`:p.ano==="CHOE"?`<i class="cmd-a ach">CHOE</i>`:p.ano?`<i class="cmd-a">${p.ano}º</i>`:"";
+  const pes=(p,eu)=>p?`<span class="cmd-p${p.nr&&p.nr===eu?" me":""}${p.nr?" nos":""}" title="${esc(p.p+" "+p.n)}">${ano(p)}<span>${esc(p.n)}</span></span>`:`<span class="cmd-p vz"><span>—</span></span>`;
+  function minhas(eu,s){ const out=[]; if(!eu||!s) return out; s.cias.forEach(c=>c.linhas.forEach(r=>{ if(r.tit&&r.tit.nr===eu) out.push({f:r.f,t:"titular",cia:c.nome}); if(r.sup&&r.sup.nr===eu&&!(r.tit&&r.tit.nr===eu)) out.push({f:r.f,t:"suplente",cia:c.nome}); })); return out; }
+  function render(){
+    const s=C.d.semanas[C.i]; const atual=C.i===semAtual();
+    const cia=s.cias[Math.min(C.cia,s.cias.length-1)]; const q=semAcento(C.q).toLowerCase().trim();
+    const me=minhas(EU,s);
+    const linhas=cia.linhas.filter(r=>!q||semAcento([r.f,r.tit&&r.tit.n,r.sup&&r.sup.n].join(" ")).toLowerCase().includes(q));
+    card.querySelector("#cmd-body").innerHTML=`
+      ${me.length?`<div class="cmd-eu">⭐<span><b>${atual?"Você está na escala esta semana":"Você está na escala nesta semana"}:</b> ${me.map(x=>`${esc(x.f)} (${x.t})`).join(" · ")}</span></div>`:""}
+      <div class="cmd-seg" role="group" aria-label="Companhia">${s.cias.map((c,i)=>`<button type="button" data-cia="${i}" aria-pressed="${c===cia}">${esc(c.nome.replace(" ABMPR",""))}</button>`).join("")}</div>
+      <input class="cmd-busca" id="cmd-q" placeholder="Buscar nome ou função…" value="${esc(C.q)}" aria-label="Buscar na escala de comando">
+      <div class="cmd-l"><div class="cmd-r hd"><span class="fn">Função</span><span>Comando</span><span>Suplência</span></div>
+      ${linhas.map(r=>{ const eu=EU&&((r.tit&&r.tit.nr===EU)||(r.sup&&r.sup.nr===EU)); const nos=(r.tit&&r.tit.nr)||(r.sup&&r.sup.nr);
+        return `<div class="cmd-r${eu?" eu":""}${nos?" nos":""}"><span class="fn">${esc(r.f)}</span>${pes(r.tit,EU)}${pes(r.sup,EU)}</div>`; }).join("")||`<div class="cmd-r"><span class="fn">Nada encontrado.</span></div>`}</div>
+      <div class="cmd-leg"><span><i class="cmd-a a3">3º</i> 3º ano</span><span><i class="cmd-a ach">CHOE</i> Aluno-oficial</span><span><i class="cmd-a">1º</i> 1º ano</span><span style="text-decoration:underline;text-decoration-color:var(--fire);text-underline-offset:3px">sublinhado</span><span>= do Pelotão Bravo</span></div>`;
+    card.querySelector("#cmd-per").textContent=`${dm(s.ini)} a ${dm(s.fim)}${atual?" · atual":""}`;
+    card.querySelector("#cmd-ant").disabled=C.i<=0; card.querySelector("#cmd-prox").disabled=C.i>=C.d.semanas.length-1;
+  }
+  card.addEventListener("click",e=>{ const b=e.target.closest("[data-cia]"); if(b){ C.cia=+b.dataset.cia; render(); }
+    if(e.target.closest("#cmd-ant")&&C.i>0){ C.i--; render(); } if(e.target.closest("#cmd-prox")&&C.i<C.d.semanas.length-1){ C.i++; render(); } });
+  card.addEventListener("input",e=>{ if(e.target.id!=="cmd-q") return; C.q=e.target.value; const pos=e.target.selectionStart; render(); const i=card.querySelector("#cmd-q"); i.focus(); try{ i.setSelectionRange(pos,pos); }catch(_){} });
+  // aviso no Painel para quem está na escala (esta semana ou a próxima)
+  window.alertasComando=function(eu,W){ if(!C.d||!eu) return []; const out=[]; const i=semAtual(), s=C.d.semanas;
+    const a=minhas(eu,s[i]); if(a.length&&s[i].ini<=hoje()) out.push(W("gold","user",`<b>Escala de comando: ${esc(a.map(x=>x.f+(x.t==="suplente"?" (suplente)":"")).join(" · "))}</b><small>semana ${dm(s[i].ini)} a ${dm(s[i].fim)}</small>`,"#cmd-card"));
+    const n=s.find(x=>x.ini>hoje()); const b=n?minhas(eu,n):[]; if(b.length) out.push(W("gold","user",`<b>Próxima semana no comando: ${esc(b.map(x=>x.f+(x.t==="suplente"?" (suplente)":"")).join(" · "))}</b><small>a partir de ${dm(n.ini)}</small>`,"#cmd-card"));
+    return out; };
+  async function carrega(){ try{ const r=await fetch("comando.json",{cache:"no-cache"}); if(!r.ok) throw 0; const d=await r.json(); const novo=!C.d; C.d=d; if(novo){ C.i=semAtual(); const s=C.d.semanas[C.i]; const k=s?s.cias.findIndex(c=>c.linhas.some(r=>(r.tit&&r.tit.nr===EU)||(r.sup&&r.sup.nr===EU))):-1; if(k>=0) C.cia=k; } card.hidden=false; render(); try{ renderAlerts(); }catch(e){} }catch(e){ if(!C.d) card.hidden=true; } }
+  carrega(); setInterval(()=>{ if(!document.hidden) carrega(); },10*60*1000);
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
