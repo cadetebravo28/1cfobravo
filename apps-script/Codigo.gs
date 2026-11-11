@@ -36,6 +36,7 @@ function doGet(e) {
     if (p.a === 'v') return json(lerFonte(p.k));
     if (p.a === 'fotos') return json({ fotos: lerFotos() });
     if (p.a === 'feed') return json(lerFeed(p.antes));
+    if (p.a === 'stories') return json(lerStories());
     if (p.a === 'perfil') return json(lerPerfil(p.nr));
     if (p.a === 'img') return json(lerImagem(p.id));
     if (p.a === 'admin') return json({ ok: conferirAdmin(p.admin) });
@@ -52,6 +53,8 @@ function doPost(e) {
     if (b.a === 'foto') return json(salvarFoto(b.nr, b.img));
     if (b.a === 'pin') return json(conferePin(b.nr, b.pin));
     if (b.a === 'post') return json(novoPost(b));
+    if (b.a === 'story') return json(novaHistoria(b));
+    if (b.a === 'visto') return json(visto(b));
     if (b.a === 'bio') return json(salvaBio(b));
     if (b.a === 'reagir') return json(reagir(b));
     if (b.a === 'comentar') return json(comentar(b));
@@ -285,4 +288,33 @@ function lerPerfil(nr) {
   return { nr: nr, bio: pf.bio || '', posts: meus.slice(0, 120), total: meus.length,
            treinosMes: tm.length, kmMes: Math.round(tm.reduce((a, p) => a + (p.treino.dist || 0), 0) * 10) / 10,
            minMes: tm.reduce((a, p) => a + (p.treino.min || 0), 0) };
+}
+
+// =====================================================================
+//  HISTÓRIAS DE 24 HORAS
+// =====================================================================
+const DIA_MS = 24 * 3600 * 1000;
+function lerStories() {
+  const agora = Date.now(); const vivas = [];
+  const lock = LockService.getScriptLock();
+  if (lock.tryLock(5000)) {
+    try { linhas('stories').slice().reverse().forEach(r => { if (agora - r.d.t > DIA_MS) { apagaImagem(r.d.img); aba('stories').deleteRow(r.row); } else vivas.push(r.d); }); }
+    finally { lock.releaseLock(); }
+  } else linhas('stories').forEach(r => { if (agora - r.d.t <= DIA_MS) vivas.push(r.d); });
+  return { stories: vivas.sort((a, b) => a.t - b.t), agora: agora };
+}
+function novaHistoria(b) {
+  exigePin(b); if (!b.img) throw new Error('A história precisa de uma foto.');
+  const id = novoId('s');
+  const d = { id: id, t: Date.now(), nr: String(b.nr), aloja: txt(b.aloja, 3), leg: txt(b.leg, 140), img: salvaImagem(b.img, id), vis: [] };
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try { grava('stories', id, d); } finally { lock.releaseLock(); }
+  return { ok: true, story: d };
+}
+function visto(b) {
+  const nr = String(b.nr || ''); if (!/^1\d{3}$/.test(nr)) return { ok: false };
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try { const x = linhas('stories').find(r => r.id === String(b.id)); if (x && x.d.nr !== nr && (x.d.vis || []).indexOf(nr) < 0) { x.d.vis = (x.d.vis || []).concat([nr]); grava('stories', x.id, x.d); } }
+  finally { lock.releaseLock(); }
+  return { ok: true };
 }

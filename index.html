@@ -1094,6 +1094,8 @@ a.wa:hover{border-color:rgba(255,255,255,.2)}
 
 <section class="view" id="v-mural" hidden>
   <div class="sec-head"><h2>Pelotão</h2><div class="live" id="so-live"><i></i><span>Feed de todos os alojamentos</span></div></div>
+  <div class="hs-wrap" id="hs-wrap" hidden><span class="label">Histórias · somem em 24 h</span><div class="hs-bar" id="hs-bar"></div></div>
+  <input type="file" id="hs-in" accept="image/*" hidden>
   <div class="so-top">
     <form class="panel so-comp" id="so-form">
       <div class="so-seg" role="group" aria-label="Tipo de post"><button type="button" data-modo="foto" aria-pressed="true">📷 Post</button><button type="button" data-modo="treino" aria-pressed="false">🏃 Treino</button></div>
@@ -2706,6 +2708,135 @@ nav.tabs a[data-v="mural"]{position:relative}
   setInterval(()=>{ if(!document.hidden&&naAba()&&!document.querySelector(".mm")) carrega(); },40000);
   setTimeout(checaNovos,4000); setInterval(checaNovos,90000);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ if(naAba()) carrega(); else checaNovos(); } });
+})();
+</script>
+
+<style>
+/* ===== Histórias de 24 h ===== */
+.hs-wrap{display:grid;gap:6px}
+.hs-wrap .label{color:var(--gold)}
+.hs-bar{display:flex;gap:14px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:none}
+.hs-bar::-webkit-scrollbar{display:none}
+.hsb{flex:0 0 auto;display:grid;justify-items:center;gap:5px;width:70px;background:none;border:0;color:var(--fg);font:inherit;cursor:pointer;padding:0}
+.hsb .ring{width:64px;height:64px;border-radius:50%;padding:3px;background:conic-gradient(var(--fire),var(--gold),var(--fire))}
+.hsb.visto .ring{background:var(--line)}
+.hsb .ring span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;border:3px solid var(--bg);background:var(--navy-2);font-weight:700;font-size:16px;background-size:cover;background-position:center}
+.hsb b{font-size:11.5px;font-weight:600;max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hsb.add .ring{background:none;border:2px dashed var(--muted);padding:2px}
+.hsb.add .ring span{border:0;background-color:var(--panel-2);font-size:26px;color:var(--gold);position:relative}
+.hsb.add .ring span.tem-foto::after{content:"+";position:absolute;right:-4px;bottom:-4px;width:22px;height:22px;border-radius:50%;background:var(--fire);color:#fff;font-size:16px;display:grid;place-items:center;border:2px solid var(--bg)}
+.hsv{position:fixed;inset:0;z-index:140;background:#000;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);user-select:none;touch-action:manipulation}
+.hsv-bars{display:flex;gap:4px;padding:10px 12px 6px}
+.hsv-bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.3);overflow:hidden}
+.hsv-bars i b{display:block;height:100%;width:0;background:#fff}
+.hsv-h{display:flex;align-items:center;gap:10px;padding:4px 12px 8px;color:#fff}
+.hsv-h .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;background:var(--navy-2);background-size:cover;background-position:center}
+.hsv-h small{color:rgba(255,255,255,.7);margin-left:6px;font-size:12px}
+.hsv-h .x{margin-left:auto;background:none;border:0;color:#fff;font-size:30px;line-height:1;cursor:pointer;padding:0 4px}
+.hsv-img{flex:1;display:grid;place-items:center;position:relative;min-height:0}
+.hsv-img img{max-width:100%;max-height:100%;object-fit:contain}
+.hsv-img .tap{position:absolute;top:0;bottom:0;width:40%;background:none;border:0;cursor:pointer}
+.hsv-img .tap.l{left:0} .hsv-img .tap.r{right:0}
+.hsv-leg{color:#fff;text-align:center;font-size:16px;padding:10px 16px;text-shadow:0 1px 4px #000}
+.hsv-vis{color:#fff;font-size:13px;padding:0 16px 8px;text-align:center}
+.hsv-f{display:flex;justify-content:center;padding:6px 12px 14px}
+.hsv-f button{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;font:inherit;font-size:13px;padding:7px 14px;cursor:pointer}
+.hsv-load{color:rgba(255,255,255,.6);font-size:14px}
+</style>
+<script>
+/* ===== Histórias de 24 h (versão independente) ===== */
+(function(){
+  const API=window.ALOJA_API, C=window.__alojaCred; if(!API||!C) return;
+  const H={lista:[],img:new Map(),adm:null};
+  const TODOS={}; Object.values(ALOJAS).forEach(l=>l.forEach(m=>TODOS[m.nr]=m));
+  const nomeDe=nr=>{ const m=TODOS[+nr]; return m?m.guerra:"Cadete "+nr; };
+  const iniDe=nr=>{ const m=TODOS[+nr]; return m?ini2(m.nome):String(nr).slice(-2); };
+  const ha=t=>{ const m=Math.max(0,Math.round((Date.now()-t)/60000)); return m<1?"agora":m<60?`${m} min`:`${Math.round(m/60)} h`; };
+  const getPin=()=>{ try{ return localStorage.getItem("aloja_pin_"+EU)||""; }catch(e){ return ""; } };
+  const setPin=p=>{ try{ localStorage.setItem("aloja_pin_"+EU,p); }catch(e){} };
+  const vistos=()=>{ try{ return new Set(JSON.parse(localStorage.getItem("hist_vistas")||"[]")); }catch(e){ return new Set(); } };
+  const marca=id=>{ try{ const s=vistos(); s.add(id); localStorage.setItem("hist_vistas",JSON.stringify([...s].slice(-500))); }catch(e){} };
+  async function get(p){ const r=await fetch(API+"?"+new URLSearchParams({...p,u:C.u,s:C.s})); const j=await r.json(); if(j.error) throw new Error(j.error); return j; }
+  async function post(b){ const r=await fetch(API,{method:"POST",body:JSON.stringify({...b,u:C.u,s:C.s})}); const j=await r.json(); if(j.error) throw new Error(j.error); return j; }
+  function modal(html){ const d=document.createElement("div"); d.className="mm"; d.style.zIndex=150; d.innerHTML=`<div class="mm-b">${html}</div>`; document.body.appendChild(d); return d; }
+  function pedirPin(){ return new Promise(res=>{
+    const d=modal(`<h3>Seu PIN</h3><p>Digite seu PIN de 4 a 6 números (o mesmo dos posts). Na primeira vez, o PIN digitado fica sendo o seu.</p><input id="hs-pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off"><div class="mm-err" id="hs-err" hidden></div><div class="row"><button class="so-btn" id="hs-c">Cancelar</button><button class="so-btn pri" id="hs-ok">Confirmar</button></div>`);
+    const inp=d.querySelector("#hs-pin"), er=d.querySelector("#hs-err"); inp.focus(); const fim=v=>{ d.remove(); res(v); };
+    d.querySelector("#hs-c").onclick=()=>fim(null);
+    const ok=async()=>{ try{ const j=await post({a:"pin",nr:EU,pin:inp.value.trim()}); if(j.ok){ setPin(inp.value.trim()); fim(inp.value.trim()); } else { er.textContent=j.erro||"PIN incorreto."; er.hidden=false; } }catch(e){ er.textContent=e.message; er.hidden=false; } };
+    d.querySelector("#hs-ok").onclick=ok; inp.onkeydown=e=>{ if(e.key==="Enter") ok(); }; }); }
+  async function comPin(fn){ let p=getPin(); if(!p) p=await pedirPin(); if(!p) return null;
+    try{ return await fn(p); }catch(e){ if(/PIN/i.test(e.message)){ setPin(""); const p2=await pedirPin(); if(!p2) return null; return fn(p2).catch(()=>null); } aviso(e.message); return null; } }
+  function aviso(t){ const d=modal(`<h3>Histórias</h3><p>${esc(t)}</p><div class="row"><button class="so-btn pri" id="hs-k">OK</button></div>`); d.querySelector("#hs-k").onclick=()=>d.remove(); }
+  function reduz(file,max){ return new Promise((ok,err)=>{ const r=new FileReader(); r.onerror=err; r.onload=()=>{ const im=new Image(); im.onerror=err; im.onload=()=>{
+    const k=Math.min(1,max/Math.max(im.width,im.height)); const c=document.createElement("canvas"); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+    c.getContext("2d").drawImage(im,0,0,c.width,c.height); ok(c.toDataURL("image/jpeg",0.8)); }; im.src=r.result; }; r.readAsDataURL(file); }); }
+  async function carregaImg(id,el){ if(H.img.has(id)){ el.src=H.img.get(id); return; } try{ const j=await get({a:"img",id}); if(j.data){ H.img.set(id,j.data); el.src=j.data; } }catch(e){} }
+
+  // ---------- barra ----------
+  function grupos(){ const g={}; H.lista.forEach(s=>(g[s.nr]=g[s.nr]||[]).push(s)); return Object.entries(g).sort((a,b)=>b[1][b[1].length-1].t-a[1][a[1].length-1].t); }
+  function renderBarra(){
+    const vis=vistos(), gs=grupos(); const meu=gs.find(([n])=>n===String(EU));
+    let h=EU?`<button class="hsb add" data-hs-add="1"><span class="ring"><span data-foto="${EU}">+</span></span><b>${meu?"Adicionar":"Sua história"}</b></button>`:"";
+    h+=gs.map(([nr,l])=>{ const todos=nr===String(EU)||l.every(s=>vis.has(s.id)); return `<button class="hsb${todos?" visto":""}" data-hs="${nr}"><span class="ring"><span data-foto="${nr}">${iniDe(nr)}</span></span><b>${esc(nr===String(EU)?"Você":nomeDe(nr))}</b></button>`; }).join("");
+    const el=document.getElementById("hs-bar"); if(el) el.innerHTML=h;
+    const w=document.getElementById("hs-wrap"); if(w) w.hidden=!(gs.length||EU);
+    try{ aplicaFotos(el); }catch(e){}
+  }
+  async function atualiza(){ if(document.hidden) return; try{ const j=await get({a:"stories"}); H.lista=j.stories||[]; renderBarra(); if(V) V.gs=grupos(); }catch(e){} }
+
+  // ---------- visualizador ----------
+  let V=null;
+  function abre(nr){ const gs=grupos(); const gi=gs.findIndex(([n])=>n===String(nr)); if(gi<0) return;
+    const vis=vistos(); let si=gs[gi][1].findIndex(s=>!vis.has(s.id)); if(si<0) si=0;
+    const d=document.createElement("div"); d.className="hsv"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Histórias"); document.body.appendChild(d);
+    V={d,gs,gi,si,t:null}; mostra(); }
+  function fecha(){ if(!V) return; clearTimeout(V.t); V.d.remove(); V=null; renderBarra(); }
+  function passo(k){ if(!V) return; const l=V.gs[V.gi][1]; V.si+=k;
+    if(V.si>=l.length){ V.gi++; V.si=0; if(V.gi>=V.gs.length) return fecha(); }
+    if(V.si<0){ V.gi--; if(V.gi<0){ V.gi=0; V.si=0; } else V.si=V.gs[V.gi][1].length-1; }
+    mostra(); }
+  function mostra(){
+    const [nr,l]=V.gs[V.gi]; const s=l[V.si]; const meu=nr===String(EU); clearTimeout(V.t); V.t=null;
+    V.d.innerHTML=`<div class="hsv-bars">${l.map((x,i)=>`<i><b style="width:${i<V.si?100:0}%"></b></i>`).join("")}</div>
+      <div class="hsv-h"><span class="av" data-foto="${nr}">${iniDe(nr)}</span><span><b>${esc(meu?"Você":nomeDe(nr))}</b><small>Aloja ${esc(s.aloja||"")} · ${ha(s.t)}</small></span><button class="x" data-hv="x" aria-label="Fechar">×</button></div>
+      <div class="hsv-img"><span class="hsv-load">Carregando…</span><img alt="História de ${esc(nomeDe(nr))}" hidden><button class="tap l" data-hv="p" aria-label="Anterior"></button><button class="tap r" data-hv="n" aria-label="Próxima"></button></div>
+      ${s.leg?`<div class="hsv-leg">${esc(s.leg)}</div>`:""}
+      ${meu?`<div class="hsv-vis">👁 ${s.vis.length} ${s.vis.length===1?"visualização":"visualizações"}${s.vis.length?": "+s.vis.map(n=>esc(nomeDe(n))).join(", "):""}</div>`:""}
+      ${meu||H.adm?`<div class="hsv-f"><button data-hv="del">Apagar história</button></div>`:""}`;
+    try{ aplicaFotos(V.d); }catch(e){}
+    const img=V.d.querySelector("img"), ld=V.d.querySelector(".hsv-load");
+    marca(s.id); if(!meu&&EU) post({a:"visto",nr:EU,id:s.id}).catch(()=>{});
+    const bar=V.d.querySelectorAll(".hsv-bars b")[V.si];
+    const vai=()=>{ if(!V||V.t) return; ld.remove(); img.hidden=false; bar.style.transition="width 6s linear"; requestAnimationFrame(()=>{ bar.style.width="100%"; }); V.t=setTimeout(()=>passo(1),6000); };
+    img.onload=vai; carregaImg(s.img,img); setTimeout(()=>{ if(V&&!V.t&&img.src) vai(); },5000);
+  }
+
+  // ---------- eventos ----------
+  document.addEventListener("click",async e=>{
+    const T=e.target.closest?e.target:null; if(!T) return;
+    const hv=T.closest("[data-hv]"); if(hv&&V){ const a=hv.dataset.hv;
+      if(a==="x") fecha(); else if(a==="n") passo(1); else if(a==="p") passo(-1);
+      else if(a==="del"){ const s=V.gs[V.gi][1][V.si]; clearTimeout(V.t);
+        let adm=null; try{ adm=sessionStorage.getItem("mural_adm"); }catch(_){}
+        const j=String(s.nr)===String(EU)?await comPin(p=>post({a:"apagar",nr:EU,pin:p,id:s.id,tipo:"story"})):adm?await post({a:"apagar",admin:adm,id:s.id,tipo:"story"}).catch(()=>null):null;
+        if(j){ H.lista=H.lista.filter(x=>x.id!==s.id); fecha(); } }
+      return; }
+    const b=T.closest("[data-hs]"); if(b){ abre(b.dataset.hs); return; }
+    if(T.closest("[data-hs-add]")){ document.getElementById("hs-in").click(); }
+  });
+  document.addEventListener("keydown",e=>{ if(!V) return; if(e.key==="Escape") fecha(); if(e.key==="ArrowRight") passo(1); if(e.key==="ArrowLeft") passo(-1); });
+  document.addEventListener("change",async e=>{
+    if(e.target.id!=="hs-in") return; const f=e.target.files[0]; e.target.value=""; if(!f) return;
+    let url; try{ url=await reduz(f,1080); }catch(_){ return aviso("Não consegui abrir essa foto."); }
+    const d=modal(`<h3>Nova história</h3><img src="${url}" alt="" style="border-radius:8px;max-height:260px;object-fit:cover;width:100%"><input id="hs-leg" maxlength="140" placeholder="Legenda (opcional)" style="font-size:15px"><p>Fica visível para todo o pelotão por 24 horas.</p><div class="row"><button class="so-btn" id="hs-c2">Cancelar</button><button class="so-btn pri" id="hs-pub">Publicar</button></div>`);
+    d.querySelector("#hs-c2").onclick=()=>d.remove();
+    d.querySelector("#hs-pub").onclick=async ev=>{ ev.target.disabled=true; ev.target.textContent="Enviando…"; const leg=d.querySelector("#hs-leg").value; d.style.display="none";
+      const j=await comPin(p=>post({a:"story",nr:EU,pin:p,aloja:ALOJA,leg,img:url})); d.remove();
+      if(j&&j.story){ H.lista.push(j.story); renderBarra(); } };
+  });
+  renderBarra(); atualiza(); setInterval(atualiza,40000);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) atualiza(); });
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
