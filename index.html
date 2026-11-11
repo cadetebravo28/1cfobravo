@@ -3308,8 +3308,8 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 .sec-head h2{font-family:var(--font-display)!important;font-size:22px!important;font-weight:700!important;letter-spacing:.04em!important;text-transform:uppercase;display:flex;align-items:center;gap:9px;line-height:1.1}
 .sec-head h2::before{content:"";flex:0 0 auto;width:4px;height:20px;border-radius:2px;background:var(--fire)}
 .hdr h1 .l1{color:var(--fg)!important}
-.minibar b{font-size:19px!important;white-space:nowrap}
-.v2-side b{font-size:24px!important;line-height:1.05!important}
+.minibar b{font-size:22px!important;white-space:nowrap}
+.v2-side b{font-size:32px!important;line-height:1!important}
 /* boas-vindas sem cartão */
 .welcome{background:none!important;border:0!important;padding:4px 0 0!important;gap:12px!important;overflow:visible}
 .welcome::before{display:none!important}
@@ -3428,8 +3428,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   .hdr-txt{position:relative;z-index:1;justify-items:start!important;gap:6px!important}
   .kick{font-size:11px!important;letter-spacing:.22em!important}
   .kick::before{display:block!important;width:18px!important;height:2px!important}
-  .hdr h1{font-size:46px!important;line-height:.92!important;white-space:normal!important}
-  .hdr h1 .l1{display:block}
+  .hdr h1{font-size:66px!important;line-height:.9!important}
   .wl-t h2{font-size:23px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sd-tmp .sd-s{white-space:normal}
   .turma{font-size:16px!important;letter-spacing:.14em!important}
@@ -3611,8 +3610,8 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   const eu=()=>MILITARES.find(m=>m.nr===EU);
 
   /* ---------- nome no topo: Pelotão Bravo ---------- */
-  { const h1=document.querySelector(".hdr h1"); if(h1) h1.innerHTML='<span class="l1">PELOTÃO</span> <span>BRAVO</span>';
-    const mbb=document.querySelector(".minibar b"); if(mbb) mbb.innerHTML='PELOTÃO <span>BRAVO</span>'; }
+  { const h1=document.querySelector(".hdr h1"); if(h1) h1.innerHTML='BRAVO';
+    const mbb=document.querySelector(".minibar b"); if(mbb) mbb.innerHTML='BRAVO'; }
   /* ---------- boas-vindas + Seu dia ---------- */
   const wl=$("#welcome"), wid=wl&&wl.querySelector(".wl-id");
   let sd=null, dia=null;
@@ -3697,7 +3696,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   const badge=$("#ig-badge"); if(badge){ const sync=()=>{ bell.querySelector("i").hidden=badge.hidden; }; new MutationObserver(sync).observe(badge,{attributes:true}); sync(); }
   const nav=$("nav.tabs");
   const side=document.createElement("div"); side.className="v2-side";
-  side.innerHTML=`<img src="${(document.querySelector(".minibar img")||{}).src||""}" alt="Mascote da turma Aspirantes 2028"><b>PELOTÃO <span>BRAVO</span></b><small>Aspirantes 2028</small>`;
+  side.innerHTML=`<img src="${(document.querySelector(".minibar img")||{}).src||""}" alt="Mascote da turma Aspirantes 2028"><b>BRAVO</b><small>Aspirantes 2028</small>`;
   const sideF=document.createElement("div"); sideF.className="v2-side-f";
   sideF.innerHTML=`<div class="row"><button type="button" class="v2-troca">${SVG(IC.troca).replace("<svg",'<svg width="15" height="15"')} Aloja ${ALOJA}</button></div><div class="stripe"></div>`;
   sideF.querySelector(".v2-troca").onclick=()=>troca&&troca.click();
