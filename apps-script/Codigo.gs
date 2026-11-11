@@ -38,6 +38,8 @@ function doGet(e) {
     if (p.a === 'feed') return json(lerFeed(p.antes));
     if (p.a === 'stories') return json(lerStories());
     if (p.a === 'perfil') return json(lerPerfil(p.nr));
+    if (p.a === 'atividades') return json(lerAtividades(p.nr));
+    if (p.a === 'post') return json({ post: lerPost(p.id) });
     if (p.a === 'img') return json(lerImagem(p.id));
     if (p.a === 'admin') return json({ ok: conferirAdmin(p.admin) });
     return json({ ok: true, fontes: Object.keys(FONTES) });
@@ -56,6 +58,8 @@ function doPost(e) {
     if (b.a === 'story') return json(novaHistoria(b));
     if (b.a === 'visto') return json(visto(b));
     if (b.a === 'bio') return json(salvaBio(b));
+    if (b.a === 'destacar') return json(destacar(b));
+    if (b.a === 'destaque_apagar') return json(apagaDestaque(b));
     if (b.a === 'reagir') return json(reagir(b));
     if (b.a === 'comentar') return json(comentar(b));
     if (b.a === 'apagar') return json(apagar(b));
@@ -224,9 +228,9 @@ function editaPost(id, fn) {
   finally { lock.releaseLock(); }
 }
 function reagir(b) {
-  exigePin(b); const emo = ['👍', '🔥', '😂', '💪'].indexOf(b.emo) >= 0 ? b.emo : null; if (!emo) throw new Error('Reação inválida.');
+  exigePin(b); const emo = ['❤️', '👍', '🔥', '😂', '💪'].indexOf(b.emo) >= 0 ? b.emo : null; if (!emo) throw new Error('Reação inválida.');
   const nr = String(b.nr);
-  return { ok: true, post: editaPost(String(b.id), d => { d.reac = d.reac || {}; const l = d.reac[emo] || []; const i = l.indexOf(nr); if (i >= 0) l.splice(i, 1); else l.push(nr); d.reac[emo] = l; }) };
+  return { ok: true, post: editaPost(String(b.id), d => { d.reac = d.reac || {}; const l = d.reac[emo] || []; const i = l.indexOf(nr); d.rt = d.rt || {}; if (i >= 0) { l.splice(i, 1); delete d.rt[nr + emo]; } else { l.push(nr); d.rt[nr + emo] = Date.now(); } d.reac[emo] = l; }) };
 }
 function comentar(b) {
   exigePin(b); const t = txt(b.texto, 300); if (!t) throw new Error('Comentário vazio.');
@@ -244,7 +248,7 @@ function apagar(b) {
       grava('posts', id, x.d); return { ok: true, post: x.d };
     }
     if (!adm && x.d.nr !== String(b.nr)) throw new Error('Só o autor ou a moderação podem apagar.');
-    apagaImagem(x.d.img); apagaImagem(x.d.th); aba(tipo).deleteRow(x.row);
+    if (!x.d.dest) apagaImagem(x.d.img); apagaImagem(x.d.th); aba(tipo).deleteRow(x.row);
   } finally { lock.releaseLock(); }
   return { ok: true };
 }
@@ -285,7 +289,8 @@ function lerPerfil(nr) {
   const meus = todos.filter(p => p.nr === nr).sort((a, b) => b.t - a.t);
   const m = mesAtual(); const tm = meus.filter(p => p.tipo === 'treino' && p.treino && mesDe(p.t) === m);
   const pf = perfis()[nr] || {};
-  return { nr: nr, bio: pf.bio || '', posts: meus.slice(0, 120), total: meus.length,
+  const dx = linhas('destaques').find(r => r.id === nr);
+  return { nr: nr, bio: pf.bio || '', destaques: dx ? dx.d.grupos || [] : [], posts: meus.slice(0, 120), total: meus.length,
            treinosMes: tm.length, kmMes: Math.round(tm.reduce((a, p) => a + (p.treino.dist || 0), 0) * 10) / 10,
            minMes: tm.reduce((a, p) => a + (p.treino.min || 0), 0) };
 }
@@ -298,7 +303,7 @@ function lerStories() {
   const agora = Date.now(); const vivas = [];
   const lock = LockService.getScriptLock();
   if (lock.tryLock(5000)) {
-    try { linhas('stories').slice().reverse().forEach(r => { if (agora - r.d.t > DIA_MS) { apagaImagem(r.d.img); aba('stories').deleteRow(r.row); } else vivas.push(r.d); }); }
+    try { linhas('stories').slice().reverse().forEach(r => { if (agora - r.d.t > DIA_MS) { if (!r.d.dest) apagaImagem(r.d.img); aba('stories').deleteRow(r.row); } else vivas.push(r.d); }); }
     finally { lock.releaseLock(); }
   } else linhas('stories').forEach(r => { if (agora - r.d.t <= DIA_MS) vivas.push(r.d); });
   return { stories: vivas.sort((a, b) => a.t - b.t), agora: agora };
@@ -318,3 +323,52 @@ function visto(b) {
   finally { lock.releaseLock(); }
   return { ok: true };
 }
+
+// ---- Destaques do perfil (histórias que ficam) ----
+function destacar(b) {
+  exigePin(b); const nr = String(b.nr); const nome = txt(b.nome, 24) || 'Destaques';
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const st = linhas('stories').find(r => r.id === String(b.id));
+    if (!st) throw new Error('História não encontrada (talvez já tenha expirado).');
+    if (st.d.nr !== nr) throw new Error('Você só pode destacar as suas histórias.');
+    st.d.dest = true; grava('stories', st.id, st.d);
+    const x = linhas('destaques').find(r => r.id === nr); const g = x ? (x.d.grupos || []) : [];
+    let grp = g.find(z => z.nome.toLowerCase() === nome.toLowerCase()); if (!grp) { grp = { nome: nome, itens: [] }; g.push(grp); }
+    if (!grp.itens.some(i => i.id === st.id)) grp.itens.push({ id: st.id, img: st.d.img, leg: st.d.leg || '', t: st.d.t });
+    grp.itens = grp.itens.slice(-30);
+    grava('destaques', nr, { grupos: g.slice(0, 12) });
+    return { ok: true, grupos: g };
+  } finally { lock.releaseLock(); }
+}
+function apagaDestaque(b) {
+  exigePin(b); const nr = String(b.nr);
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const x = linhas('destaques').find(r => r.id === nr); if (!x) return { ok: true, grupos: [] };
+    let g = x.d.grupos || []; const grp = g.find(z => z.nome === b.nome); if (!grp) return { ok: true, grupos: g };
+    const sai = b.item ? grp.itens.filter(i => i.id === b.item) : grp.itens;
+    grp.itens = b.item ? grp.itens.filter(i => i.id !== b.item) : [];
+    sai.forEach(i => { if (!linhas('stories').some(r => r.id === i.id)) apagaImagem(i.img); });
+    g = g.filter(z => z.itens.length);
+    grava('destaques', nr, { grupos: g });
+    return { ok: true, grupos: g };
+  } finally { lock.releaseLock(); }
+}
+
+// ---- Atividades: curtidas e comentários nos seus posts ----
+function lerAtividades(nr) {
+  nr = String(nr || ''); if (!/^1\d{3}$/.test(nr)) throw new Error('número inválido');
+  const ev = [];
+  linhas('posts').forEach(r => { const p = r.d; if (p.nr !== nr) return;
+    const rt = p.rt || {};
+    Object.keys(p.reac || {}).forEach(emo => (p.reac[emo] || []).forEach(q => { if (q !== nr) ev.push({ tipo: 'reac', t: rt[q + emo] || p.t, de: q, emo: emo, post: p.id, th: p.th || p.img || null }); }));
+    (p.com || []).forEach(c => { if (c.nr !== nr) ev.push({ tipo: 'com', t: c.t, de: c.nr, texto: c.texto, post: p.id, th: p.th || p.img || null }); });
+  });
+  linhas('posts').forEach(r => { const p = r.d; if (p.nr === nr) return;   // menções com @nome em comentários
+    if (p.texto && p.texto.indexOf('@' + nr) >= 0) ev.push({ tipo: 'men', t: p.t, de: p.nr, texto: p.texto, post: p.id, th: p.th || p.img || null });
+    (p.com || []).forEach(c => { if (c.nr !== nr && c.texto && c.texto.indexOf('@' + nr) >= 0) ev.push({ tipo: 'men', t: c.t, de: c.nr, texto: c.texto, post: p.id, th: p.th || p.img || null }); });
+  });
+  return { atividades: ev.sort((a, b) => b.t - a.t).slice(0, 60) };
+}
+function lerPost(id) { const x = linhas('posts').find(r => r.id === String(id)); return x ? x.d : null; }
