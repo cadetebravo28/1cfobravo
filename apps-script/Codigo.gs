@@ -40,6 +40,7 @@ function doGet(e) {
     if (p.a === 'perfil') return json(lerPerfil(p.nr));
     if (p.a === 'atividades') return json(lerAtividades(p.nr));
     if (p.a === 'post') return json({ post: lerPost(p.id) });
+    if (p.a === 'online') return json(lerOnline());
     if (p.a === 'img') return json(lerImagem(p.id));
     if (p.a === 'admin') return json({ ok: conferirAdmin(p.admin) });
     return json({ ok: true, fontes: Object.keys(FONTES) });
@@ -63,6 +64,7 @@ function doPost(e) {
     if (b.a === 'reagir') return json(reagir(b));
     if (b.a === 'comentar') return json(comentar(b));
     if (b.a === 'apagar') return json(apagar(b));
+    if (b.a === 'ping') return json(presenca(b));
     return json({ error: 'ação desconhecida' });
   } catch (err) {
     return json({ error: String(err && err.message || err) });
@@ -501,4 +503,20 @@ function avisaPelotao(tipo, de, post, extra) {
     if (tipo === 'post') reqs.push(pushReq(mencoes(post.texto).filter(n => n !== String(de)), 'Pelotão', '🏷️ ' + nome + ' marcou você numa publicação.', url));
     pushVarios(reqs);
   } catch (e) {}
+}
+
+// =====================================================================
+//  QUEM ESTÁ ONLINE — só na memória rápida (some sozinho em 6 h)
+// =====================================================================
+function presenca(b) {
+  const nr = String(b.nr || '');
+  const c = CacheService.getScriptCache();
+  if (MIL[nr]) c.put('pv_' + nr, JSON.stringify({ t: b.sai ? Date.now() - 125000 : Date.now(), inv: !!b.inv }), 21600);
+  return lerOnline();
+}
+function lerOnline() {
+  const ks = Object.keys(MIL).map(n => 'pv_' + n);
+  const all = CacheService.getScriptCache().getAll(ks); const out = [];
+  Object.keys(all).forEach(k => { try { const v = JSON.parse(all[k]); if (!v.inv) out.push({ nr: k.slice(3), t: v.t }); } catch (e) {} });
+  return { agora: Date.now(), on: out };
 }

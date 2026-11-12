@@ -3733,6 +3733,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
       <div class="v2-list">
         ${me?`<button type="button" data-go="perfil">${SVG(IC.pessoa)}Meu perfil<em>${esc(me.guerra)}</em></button>`:`<button type="button" data-go="id">${SVG(IC.pessoa)}Identificar-me</button>`}
         ${nt&&me?`<button type="button" data-go="notif">${SVG(IC.sino)}Notificações<em style="${ntTxt==="ativas"?"color:var(--ok)":""}">${ntTxt}</em></button>`:""}
+        ${me&&window.alojaInvisivel?`<button type="button" data-go="inv"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.5 9.5 6-.4.7-1.4 2-2.8 3.3M6.6 6.6C4.5 8 3.1 10 2.5 12c1 1.5 4.5 6 9.5 6 1.6 0 3-.4 4.3-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>Ficar invisível<em>${window.alojaInvisivel()?"ligado":"desligado"}</em></button>`:""}
         <button type="button" data-go="tema">${SVG(IC.tema)}Tema<em>${tm}</em></button>
         <button type="button" data-go="troca">${SVG(IC.troca)}Trocar alojamento<em>Aloja ${ALOJA}</em></button>
       </div></div>`;
@@ -3743,6 +3744,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
       else if(go==="perfil"){ const p=$("#wl-perfil"); if(p) p.click(); }
       else if(go==="id"||go==="troca"){ const t=go==="id"?$("#wl-sw"):troca; if(t) t.click(); }
       else if(go==="notif"){ if(nt) nt.click(); }
+      else if(go==="inv"){ window.alojaInvisivel(!window.alojaInvisivel()); }
       else if(go==="tema"){ if(tema){ tema.click(); } }
     });
   }
@@ -3807,6 +3809,78 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   nav.addEventListener("click",e=>{ if(e.target.closest("#qn-ant")) off--; else if(e.target.closest("#qn-prox")) off++; else if(e.target.closest("#qn-hoje")) off=0; else return; desenha(); });
   addEventListener("hashchange",()=>{ if(location.hash==="#qts"&&off!==0){ /* mantém a semana escolhida */ } });
   try{ desenha(); }catch(e){}
+})();
+</script>
+
+<style>
+/* ===== Quem está online ===== */
+[data-foto].is-on{position:relative;overflow:visible}
+[data-foto].is-on::after{content:"";position:absolute;right:-1px;bottom:-1px;width:28%;height:28%;min-width:9px;min-height:9px;max-width:14px;max-height:14px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 2px var(--bg)}
+.mb [data-foto].is-on::after,.st-row [data-foto].is-on::after{box-shadow:0 0 0 2.5px var(--panel)}
+.on-chip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;border:1px solid color-mix(in srgb,#22c55e 40%,transparent);background:color-mix(in srgb,#22c55e 10%,transparent);color:var(--fg);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.on-chip i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px color-mix(in srgb,#22c55e 25%,transparent);animation:onp 2s infinite}
+@keyframes onp{50%{box-shadow:0 0 0 5px transparent}}
+@media (prefers-reduced-motion:reduce){.on-chip i{animation:none}}
+.on-l{display:grid;gap:2px}
+.on-l h4{margin:12px 0 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.on-r{display:flex;align-items:center;gap:12px;padding:8px 2px;background:none;border:0;color:var(--fg);font:inherit;text-align:left;width:100%;cursor:pointer}
+.on-r .av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;background:var(--navy-2);background-size:cover;background-position:center;flex:0 0 auto}
+.on-r b{display:block;font-size:15px}
+.on-r small{display:block;font-size:12.5px;color:var(--muted)}
+.on-r small.v{color:#22c55e;font-weight:600}
+.pf-on{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:12.5px;color:var(--muted)}
+.pf-on.v{color:#22c55e;font-weight:600}
+.pf-on.v::before{content:"";width:8px;height:8px;border-radius:50%;background:#22c55e}
+</style>
+<script>
+/* ===== Quem está online (sinal a cada 45 s enquanto o app está aberto) ===== */
+(function(){
+  const API=window.ALOJA_API, C=window.__alojaCred; if(!API||!C) return;
+  const ON={lista:[],agora:Date.now(),dif:0};
+  const TODOS={}; Object.entries(ALOJAS).forEach(([a,l])=>l.forEach(m=>TODOS[m.nr]={...m,aloja:a}));
+  const inv=()=>{ try{ return localStorage.getItem("aloja_invisivel")==="1"; }catch(e){ return false; } };
+  const ehOn=t=>Date.now()+ON.dif-t<100000;
+  const visto=t=>{ const m=Math.round((Date.now()+ON.dif-t)/60000); if(m<60) return `visto há ${Math.max(1,m)} min`; const h=Math.round(m/60); return `visto há ${h} h`; };
+  async function ping(sai){
+    if(!EU) return;
+    try{ const r=await fetch(API,{method:"POST",keepalive:!!sai,body:JSON.stringify({a:"ping",nr:EU,inv:inv(),sai:!!sai,u:C.u,s:C.s})}); if(sai) return; const j=await r.json(); if(j.on){ ON.lista=j.on; ON.dif=j.agora-Date.now(); aplica(); } }catch(e){}
+  }
+  async function busca(){ try{ const r=await fetch(API+"?"+new URLSearchParams({a:"online",u:C.u,s:C.s})); const j=await r.json(); if(j.on){ ON.lista=j.on; ON.dif=j.agora-Date.now(); aplica(); } }catch(e){} }
+  const onlineSet=()=>new Set(ON.lista.filter(x=>ehOn(x.t)).map(x=>String(x.nr)).concat(EU&&!inv()?[String(EU)]:[]));
+  let aplicando=false;
+  function aplica(){
+    if(aplicando) return; aplicando=true;
+    const s=onlineSet();
+    document.querySelectorAll("[data-foto]").forEach(el=>{ const v=s.has(String(el.dataset.foto)); if(el.classList.contains("is-on")!==v) el.classList.toggle("is-on",v); });
+    const ch=document.getElementById("on-chip"); if(ch){ const sp=ch.querySelector("span"), tx=`${s.size} online`; if(sp.textContent!==tx) sp.textContent=tx; ch.hidden=!s.size; }
+    const pf=document.querySelector(".pf .pf-nm"); if(pf){ const nr=(pf.closest(".pf").querySelector(".pf-av")||{}).dataset; const n=nr&&nr.foto; let e=pf.querySelector(".pf-on");
+      if(n){ if(!e){ e=document.createElement("span"); e.className="pf-on"; pf.appendChild(e); } const x=ON.lista.find(y=>String(y.nr)===String(n)); const on=s.has(String(n));
+        const cn="pf-on"+(on?" v":""), tx=on?"Online agora":x?visto(x.t):""; if(e.className!==cn) e.className=cn; if(e.textContent!==tx) e.textContent=tx; } }
+    aplicando=false;
+  }
+  // chip na aba Pelotão
+  const top=document.querySelector(".ig-top");
+  if(top){ const b=document.createElement("button"); b.type="button"; b.className="on-chip"; b.id="on-chip"; b.hidden=true; b.innerHTML="<i></i><span></span>";
+    const ic=top.querySelector(".ig-ic"); top.insertBefore(b,ic); b.addEventListener("click",lista); const lv=document.getElementById("so-live"); if(lv) lv.style.display="none"; }
+  function lista(){
+    const s=onlineSet(); const por={};
+    const vistos=ON.lista.filter(x=>!s.has(String(x.nr))&&TODOS[x.nr]).sort((a,b)=>b.t-a.t);
+    [...s].forEach(nr=>{ const m=TODOS[nr]; if(!m) return; (por[m.aloja]=por[m.aloja]||[]).push(m); });
+    const row=(m,txt,v)=>`<button type="button" class="on-r" data-pf="${m.nr}"><span class="av" data-foto="${m.nr}">${ini2(m.nome)}</span><span><b>${esc(m.guerra)}</b><small class="${v?"v":""}">${txt}</small></span></button>`;
+    const d=document.createElement("div"); d.className="ig-sh"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Quem está online");
+    d.innerHTML=`<div class="ig-sh-h"><button data-fecha="1">‹ Voltar</button><h3>Online agora · ${s.size}</h3><span style="min-width:64px"></span></div><div class="ig-sh-in on-l">
+      ${Object.keys(por).sort().map(a=>`<h4>Aloja ${a}</h4>${por[a].map(m=>row(m,String(m.nr)===String(EU)?"você · online":"online agora",1)).join("")}`).join("")||`<div class="pf-vazio">Ninguém online agora.</div>`}
+      ${vistos.length?`<h4>Vistos recentemente</h4>${vistos.slice(0,30).map(x=>row(TODOS[x.nr],visto(x.t))).join("")}`:""}
+      <p style="color:var(--muted);font-size:12.5px;margin:14px 0 0">Aparece quem está com o app aberto. Para não aparecer, use “Ficar invisível” no menu Mais.</p></div>`;
+    document.body.appendChild(d); try{ aplicaFotos(d); }catch(e){} aplica();
+  }
+  window.alojaInvisivel=function(v){ if(v===undefined) return inv(); try{ localStorage.setItem("aloja_invisivel",v?"1":"0"); }catch(e){} ping(); aplica(); };
+  // reaplica quando a tela muda (feed, perfil, painel)
+  let tm=null; new MutationObserver(()=>{ if(aplicando) return; clearTimeout(tm); tm=setTimeout(aplica,150); }).observe(document.body,{childList:true,subtree:true});
+  ping(); setInterval(()=>{ if(!document.hidden) ping(); },45000);
+  setTimeout(busca,1500);
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) ping(); });
+  addEventListener("pagehide",()=>ping(true));
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
