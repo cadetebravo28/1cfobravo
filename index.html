@@ -3729,7 +3729,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
     const s=document.createElement("div"); s.className="v2-sheet"; s.setAttribute("role","dialog"); s.setAttribute("aria-label","Mais opções");
     const g=(id,ic,txt,bg,cor)=>`<button type="button" data-go="${id}"><span style="background:${bg};color:${cor}">${SVG(IC[ic])}</span>${txt}</button>`;
     s.innerHTML=`<div class="v2-sheet-b"><span class="grab"></span><h2>Mais</h2>
-      <div class="v2-grid">${g("cmd","estrela","Comando","rgba(232,184,74,.16)","#e8b84a")}${g("qts","grade","QTS","rgba(96,165,250,.16)","#93c5fd")}${g("anot","prancheta","Anotações","rgba(192,57,43,.18)","#f0a49b")}${g("fundo","cartao","Fundo","rgba(52,211,153,.14)","#6ee7b7")}${g("ementa","capelo","Ementa","rgba(167,139,250,.16)","#c4b5fd")}${g("planilha","planilha","Planilhas","rgba(184,194,207,.14)","#b8c2cf")}</div>
+      <div class="v2-grid">${g("efetivo","prancheta","Efetivo","rgba(52,211,153,.14)","#6ee7b7")}${g("cmd","estrela","Comando","rgba(232,184,74,.16)","#e8b84a")}${g("qts","grade","QTS","rgba(96,165,250,.16)","#93c5fd")}${g("anot","prancheta","Anotações","rgba(192,57,43,.18)","#f0a49b")}${g("fundo","cartao","Fundo","rgba(52,211,153,.14)","#6ee7b7")}${g("ementa","capelo","Ementa","rgba(167,139,250,.16)","#c4b5fd")}${g("planilha","planilha","Planilhas","rgba(184,194,207,.14)","#b8c2cf")}</div>
       <div class="v2-list">
         ${me?`<button type="button" data-go="perfil">${SVG(IC.pessoa)}Meu perfil<em>${esc(me.guerra)}</em></button>`:`<button type="button" data-go="id">${SVG(IC.pessoa)}Identificar-me</button>`}
         ${nt&&me?`<button type="button" data-go="notif">${SVG(IC.sino)}Notificações<em style="${ntTxt==="ativas"?"color:var(--ok)":""}">${ntTxt}</em></button>`:""}
@@ -3739,7 +3739,8 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
       </div></div>`;
     document.body.appendChild(s);
     s.addEventListener("click",e=>{ if(e.target===s){ fechaMais(); return; } const b=e.target.closest("[data-go]"); if(!b) return; const go=b.dataset.go; fechaMais();
-      if(go==="cmd"){ location.hash="#painel"; setTimeout(()=>{ const c=$("#cmd-card"); if(c) c.scrollIntoView({behavior:"smooth",block:"start"}); },250); }
+      if(go==="efetivo"){ if(window.abreEfetivo) window.abreEfetivo(); }
+      else if(go==="cmd"){ location.hash="#painel"; setTimeout(()=>{ const c=$("#cmd-card"); if(c) c.scrollIntoView({behavior:"smooth",block:"start"}); },250); }
       else if(["qts","anot","fundo","ementa","planilha"].includes(go)) location.hash="#"+go;
       else if(go==="perfil"){ const p=$("#wl-perfil"); if(p) p.click(); }
       else if(go==="id"||go==="troca"){ const t=go==="id"?$("#wl-sw"):troca; if(t) t.click(); }
@@ -3881,6 +3882,121 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   setTimeout(busca,1500);
   document.addEventListener("visibilitychange",()=>{ if(!document.hidden) ping(); });
   addEventListener("pagehide",()=>ping(true));
+})();
+</script>
+
+<style>
+/* ===== Controle de efetivo (parte do pelotão) ===== */
+.ef-top{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ef-top label{display:grid;gap:4px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ef-top input,.ef-top select{font:inherit;font-size:15px;letter-spacing:0;text-transform:none;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:9px 10px;min-width:0;width:100%;box-sizing:border-box}
+.ef-res{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ef-res div{display:grid;justify-items:center;padding:10px 4px;border-radius:12px;background:var(--panel);border:1px solid var(--line);line-height:1.1}
+.ef-res b{font-family:var(--font-display);font-size:30px;font-weight:800}
+.ef-res span{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ef-res .ok b{color:var(--ok)} .ef-res .fora b{color:var(--fire)}
+.ef-fil{display:flex;gap:6px}
+.ef-fil button{flex:1;height:34px;border-radius:8px;border:1px solid var(--line);background:none;color:var(--muted);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.ef-fil button[aria-pressed="true"]{background:var(--fire);border-color:var(--fire);color:#fff}
+.ef-l{display:grid;gap:6px}
+.ef-r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--panel);border:1px solid var(--line)}
+.ef-r.fora{border-color:color-mix(in srgb,var(--fire) 45%,var(--line));background:color-mix(in srgb,var(--fire) 6%,var(--panel))}
+.ef-r .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ef-r b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ef-r b small{font-weight:500;color:var(--muted);font-size:12px;margin-left:6px}
+.ef-r select{font:inherit;font-size:13.5px;font-weight:700;border-radius:999px;padding:6px 10px;border:1px solid var(--line);background:var(--panel-2);color:var(--fg);max-width:160px}
+.ef-r.fora select{background:var(--fire);border-color:var(--fire);color:#fff}
+.ef-r input{grid-column:1/-1;font:inherit;font-size:14px;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--fg);padding:7px 10px}
+.ef-r .auto{grid-column:1/-1;font-size:11.5px;color:var(--muted)}
+.ef-acoes{position:sticky;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0 calc(6px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--bg) 30%)}
+.ef-acoes button,.ef-acoes a{display:flex;align-items:center;justify-content:center;gap:8px;height:46px;border-radius:10px;border:0;font:inherit;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none}
+.ef-acoes .cp{background:var(--panel-2);color:var(--fg);border:1px solid var(--line)}
+.ef-acoes .ef-wa{background:#1fa855;color:#fff}
+.ef-prev{white-space:pre-wrap;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.45;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--fg)}
+.ef-ban{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);background:color-mix(in srgb,var(--gold) 9%,transparent);color:var(--fg);font:inherit;font-size:14px;text-align:left;cursor:pointer;width:100%}
+.ef-ban b{color:var(--gold)}
+@media (max-width:640px){.ef-desk{display:none!important}}
+</style>
+<script>
+/* ===== Controle de efetivo: o chefe de turma marca quem está fora de forma e gera a parte ===== */
+(function(){
+  const SIT=[["pres","Em forma"],["serv","Serviço"],["sai","Saindo de serviço"],["baix","Baixado"],["cmd","Comando/função"],["disp","Dispensado"],["atest","Atestado/licença"],["miss","Missão/representação"],["falta","Falta"],["atraso","Atrasado"],["out","Outro"]];
+  const NOME=Object.fromEntries(SIT); const FORAS=SIT.filter(s=>s[0]!=="pres");
+  const p2=n=>String(n).padStart(2,"0");
+  const hoje=()=>keyOf(partsSP(nowSP()));
+  const br=k=>`${k.slice(8,10)}/${k.slice(5,7)}/${k.slice(0,4)}`;
+  const ls=(k,v)=>{ try{ if(v===undefined) return localStorage.getItem(k); localStorage.setItem(k,v); }catch(e){ return null; } };
+  let CMD=null; fetch("comando.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(d=>{ CMD=d; banner(); }).catch(()=>{});
+  const semana=k=>CMD&&(CMD.semanas||[]).find(s=>s.ini<=k&&k<s.fim)||null;
+  function funcoes(k){ const s=semana(k), o={}; if(!s) return o; s.cias.forEach(c=>c.linhas.forEach(r=>{ [r.tit,r.sup&&r.f.startsWith("Suplente")?r.sup:null].forEach(p=>{ if(p&&p.nr){ o[p.nr]=o[p.nr]||[]; if(!o[p.nr].includes(r.f)) o[p.nr].push(r.f); } }); })); return o; }
+  function souChefe(k){ const s=semana(k); if(!s||!EU) return null; for(const c of s.cias) for(const r of c.linhas) if(/(Chefe de Turma|Bedel) 1º CFO Bravo/i.test(r.f)&&r.tit&&r.tit.nr===EU) return r.f; return null; }
+  function efetivo(){ return ESC.people.filter(p=>p.pel==="BRAVO").sort((a,b)=>a.nr-b.nr).map(p=>({nr:p.nr,g:curto(p),p})); }
+  function auto(k){ const out={}, j=ESC.dates.findIndex(d=>d&&d.key===k), jo=ESC.dates.findIndex(d=>d&&d.key===shiftKey(k,-1)), fn=funcoes(k);
+    efetivo().forEach(({nr,p})=>{ const c=j>=0?p.cells[j]:"", kd=kindOf(c), ko=jo>=0?kindOf(p.cells[jo]):null;
+      if(kd==="g"||kd==="v") out[nr]={s:"serv",obs:c.toUpperCase(),auto:"escala: "+c.toUpperCase()};
+      else if(kd==="b") out[nr]={s:"baix",obs:"",auto:"escala: baixado"};
+      else if(fn[nr]&&fn[nr].some(f=>!/1º CFO Bravo/i.test(f))) out[nr]={s:"cmd",obs:fn[nr].filter(f=>!/1º CFO Bravo/i.test(f)).join(", "),auto:"escala de comando"};
+      else if(ko==="g"||ko==="v") out[nr]={s:"sai",obs:"",auto:"saiu do "+String(p.cells[jo]).toUpperCase()+" hoje"}; });
+    return out; }
+  const E={dia:null,form:"Bandeira",sit:{},fil:"todos"};
+  const chave=()=>`efetivo_${E.dia}_${E.form}`;
+  function carrega(){ const a=auto(E.dia); let s={}; try{ s=JSON.parse(ls(chave())||"{}"); }catch(e){} E.sit={}; efetivo().forEach(({nr})=>{ E.sit[nr]=s[nr]||a[nr]||{s:"pres",obs:""}; if(a[nr]&&!s[nr]) E.sit[nr].auto=a[nr].auto; }); }
+  const salva=()=>{ const o={}; Object.entries(E.sit).forEach(([nr,v])=>{ if(v.s!=="pres"||v.obs) o[nr]={s:v.s,obs:v.obs||""}; }); ls(chave(),JSON.stringify(o)); };
+  function parte(){
+    const ef=efetivo(), fora=ef.filter(x=>E.sit[x.nr]&&E.sit[x.nr].s!=="pres");
+    const [y,m,d]=E.dia.split("-").map(Number); const ds=DSEM[new Date(Date.UTC(y,m-1,d,12)).getUTCDay()];
+    const me=EU&&efetivo().find(x=>x.nr===EU);
+    let t=`*PARTE DO EFETIVO · 1º CFO BM 2026 · BRAVO*\n${E.form} · ${br(E.dia)} (${ds})\n\nEfetivo total: *${ef.length}*\nEm forma: *${ef.length-fora.length}*\nFora de forma: *${fora.length}*\n`;
+    FORAS.forEach(([k,n])=>{ const l=fora.filter(x=>E.sit[x.nr].s===k); if(!l.length) return; t+=`\n*${n} (${l.length}):*\n`+l.map(x=>`• Cad ${x.nr} ${x.g}${E.sit[x.nr].obs?" – "+E.sit[x.nr].obs:""}`).join("\n")+"\n"; });
+    if(me) t+=`\n${souChefe(E.dia)?souChefe(E.dia).replace(/ 1º CFO Bravo/i,""):"Responsável"}: Cad 1º BM ${me.g}`;
+    return t.trim(); }
+  function desenha(sh){
+    const ef=efetivo(), fora=ef.filter(x=>E.sit[x.nr].s!=="pres").length;
+    sh.querySelector(".ef-res").innerHTML=`<div><b>${ef.length}</b><span>Efetivo</span></div><div class="ok"><b>${ef.length-fora}</b><span>Em forma</span></div><div class="fora"><b>${fora}</b><span>Fora</span></div>`;
+    sh.querySelectorAll(".ef-fil button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===E.fil));
+    const lista=ef.filter(x=>E.fil==="todos"||E.sit[x.nr].s!=="pres");
+    sh.querySelector(".ef-l").innerHTML=lista.length?lista.map(({nr,g})=>{ const v=E.sit[nr], f=v.s!=="pres";
+      return `<div class="ef-r${f?" fora":""}" data-nr="${nr}"><span class="n">${nr}</span><b>${esc(g)}${nr===EU?"<small>você</small>":""}</b><select aria-label="Situação de ${esc(g)}">${SIT.map(([k,n])=>`<option value="${k}"${k===v.s?" selected":""}>${n}</option>`).join("")}</select>${f?`<input maxlength="80" placeholder="Observação (ex.: GBM, consulta HPM, até 14h)" value="${esc(v.obs||"")}" aria-label="Observação">`:""}${v.auto&&f?`<span class="auto">Automático · ${esc(v.auto)}</span>`:""}</div>`; }).join(""):`<div class="pf-vazio">Todo o efetivo em forma.</div>`;
+    sh.querySelector(".ef-prev").textContent=parte();
+    sh.querySelector(".ef-acoes .ef-wa").href="https://wa.me/?text="+encodeURIComponent(parte());
+  }
+  function abre(){
+    if(!ESC.ready){ alert("A escala ainda está carregando. Tente em alguns segundos."); return; }
+    E.dia=E.dia||hoje(); carrega();
+    const sh=document.createElement("div"); sh.className="ig-sh"; sh.id="ef-sh"; sh.setAttribute("role","dialog"); sh.setAttribute("aria-label","Controle de efetivo");
+    sh.innerHTML=`<div class="ig-sh-h"><button data-fecha="1">‹ Voltar</button><h3>Efetivo · Bravo</h3><button type="button" class="pub" id="ef-zera" style="color:var(--muted);font-weight:600">Limpar</button></div>
+      <div class="ig-sh-in" style="gap:12px">
+        <div class="ef-top"><label>Data<input type="date" id="ef-dia" value="${E.dia}"></label><label>Formatura<select id="ef-form">${["Bandeira","Formatura geral","Revista","Parada diária","Outra"].map(f=>`<option${f===E.form?" selected":""}>${f}</option>`).join("")}</select></label></div>
+        <div class="ef-res"></div>
+        <div class="ef-fil" role="group" aria-label="Filtro"><button type="button" data-f="todos">Todos</button><button type="button" data-f="fora">Só fora de forma</button></div>
+        <div class="ef-l"></div>
+        <h4 style="margin:6px 0 0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)">Parte para o comandante</h4>
+        <div class="ef-prev"></div>
+        <div class="ef-acoes"><button type="button" class="cp" id="ef-copia">Copiar parte</button><a class="ef-wa" target="_blank" rel="noopener">Enviar no WhatsApp</a></div>
+      </div>`;
+    document.body.appendChild(sh); desenha(sh);
+    sh.addEventListener("change",e=>{ const r=e.target.closest(".ef-r");
+      if(r&&e.target.tagName==="SELECT"){ const v=E.sit[r.dataset.nr]; v.s=e.target.value; if(v.s==="pres") v.obs=""; delete v.auto; salva(); desenha(sh); }
+      if(e.target.id==="ef-dia"&&e.target.value){ E.dia=e.target.value; carrega(); desenha(sh); }
+      if(e.target.id==="ef-form"){ E.form=e.target.value; carrega(); desenha(sh); } });
+    sh.addEventListener("input",e=>{ const r=e.target.closest(".ef-r"); if(r&&e.target.tagName==="INPUT"){ E.sit[r.dataset.nr].obs=e.target.value; delete E.sit[r.dataset.nr].auto; salva(); sh.querySelector(".ef-prev").textContent=parte(); sh.querySelector(".ef-acoes .ef-wa").href="https://wa.me/?text="+encodeURIComponent(parte()); } });
+    sh.addEventListener("click",async e=>{ const f=e.target.closest(".ef-fil button"); if(f){ E.fil=f.dataset.f; desenha(sh); return; }
+      if(e.target.closest("#ef-zera")){ ls(chave(),"{}"); carrega(); desenha(sh); return; }
+      if(e.target.closest("#ef-copia")){ const b=e.target.closest("#ef-copia"); try{ await navigator.clipboard.writeText(parte()); b.textContent="Copiado ✓"; }catch(_){ const r=document.createRange(); r.selectNodeContents(sh.querySelector(".ef-prev")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Selecionado: copie"; } setTimeout(()=>b.textContent="Copiar parte",2000); } });
+  }
+  window.abreEfetivo=abre;
+  // aviso no Painel para o chefe de turma / bedel da semana
+  function banner(){
+    const al=document.getElementById("alerts"); if(!al) return; let b=document.getElementById("ef-ban");
+    const f=souChefe(hoje());
+    if(!f){ if(b) b.remove(); return; }
+    if(!b){ b=document.createElement("button"); b.type="button"; b.className="ef-ban"; b.id="ef-ban"; b.onclick=abre; al.insertAdjacentElement("beforebegin",b); }
+    b.innerHTML=`<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true" style="color:var(--gold);flex:0 0 auto"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 13l2 2 4-4"/></svg><span><b>${esc(f.replace(/ 1º CFO Bravo/i,""))} da semana:</b> toque para fazer a parte do efetivo</span>`;
+  }
+  setInterval(banner,30000); addEventListener("hashchange",()=>{ if(location.hash==="#efetivo"){ history.replaceState(null,"","#painel"); show&&show(); setTimeout(abre,200); } });
+  setTimeout(banner,2500);
+  // botão para tablet/computador (no celular fica no Mais)
+  const bx=document.querySelector(".v2-btns"); if(bx){ const b=document.createElement("button"); b.type="button"; b.className="wl-sw ef-desk"; b.textContent="📋 Efetivo do pelotão"; b.onclick=abre; bx.appendChild(b); }
 })();
 </script><div class="chooser" id="login" role="dialog" aria-modal="true" aria-labelledby="lg-t">
   <form class="ch-box lg-box" id="lg-f" autocomplete="on">
