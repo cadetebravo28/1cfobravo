@@ -1688,8 +1688,10 @@ function aulasDoDia(key){
   rows.forEach(r=>{const b=blocos[blocos.length-1]; if(b&&b.sg===r.sg&&b.obs===r.obs) {b.fim=r.fim;b.n++;} else blocos.push({...r,n:1});});
   return blocos;
 }
-function nomeDisc(sg){ const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); if(i!==undefined) return CURR[i].n; const q=(QTS_ATUAL&&QTS_ATUAL.disc||[]).find(d=>d.sg===sg); return q?q.nome:""; }
-function instDisc(sg){ const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); return i!==undefined?EM.map[i].inst:""; }
+const RX_VA=/(^|[^A-Za-zÀ-ú])V\.?A\.?\s*\d?(?=$|[^A-Za-zÀ-ú])/;
+const semVA=sg=>String(sg||"").replace(/\s*[-–(\/]?\s*\bV\.?A\.?\s*\d?\)?\s*$/,"").trim();
+function nomeDisc(sg){ sg=semVA(sg); const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); if(i!==undefined) return CURR[i].n; const q=(QTS_ATUAL&&QTS_ATUAL.disc||[]).find(d=>d.sg===sg); return q?q.nome:""; }
+function instDisc(sg){ sg=semVA(sg); const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); return i!==undefined?EM.map[i].inst:""; }
 function renderDiaTab(){
   const hoje=keyOf(partsSP(nowSP())), amanha=shiftKey(hoje,1);
   const key=DD.key||amanha; DD.key=key; try{renderClima();}catch(e){}
@@ -1882,9 +1884,10 @@ function renderAval(){
   const box=document.getElementById("av-provas"); if(!box) return;
   const hoje=keyOf(partsSP(nowSP())), lim=shiftKey(hoje,14);
   const itens=[], vistos=new Set();
-  const add=(key,ini,sg,obs)=>{ if(!obs||key<hoje||key>lim) return; const id=key+"|"+sg+"|"+obs; if(vistos.has(id)) return; vistos.add(id); itens.push({key,ini,sg,obs,prova:RX_PROVA.test(obs)||RX_PROVA.test(sg)}); };
+  const add=(key,ini,sg,obs)=>{ const va=RX_VA.test(sg)||RX_VA.test(obs||""); if((!obs&&!va)||key<hoje||key>lim) return; if(!obs) obs="VA · avaliação"; const id=key+"|"+sg+"|"+obs; if(vistos.has(id)) return; vistos.add(id); itens.push({key,ini,sg,obs,prova:RX_PROVA.test(obs)||RX_PROVA.test(sg)}); };
   MARC.forEach(r=>add(r.key,r.ini,r.sg,r.obs));
-  const Q=QTS_ATUAL; if(Q&&Q.notas) Q.notas.forEach(n=>{ const m=String(n.data).match(/(\d{2})\/(\d{2})\/(\d{4})/); if(m) add(`${m[3]}-${m[2]}-${m[1]}`,n.h1,n.aula,n.obs); });
+  const Q=QTS_ATUAL; if(Q&&Q.slots) Q.slots.forEach(sl=>{ if(sl.brk) return; (sl.c||[]).forEach((v,i)=>{ if(v&&RX_VA.test(v)) add(shiftKey(Q.ini,i),sl.ini,v,""); }); });
+  if(Q&&Q.notas) Q.notas.forEach(n=>{ const m=String(n.data).match(/(\d{2})\/(\d{2})\/(\d{4})/); if(m) add(`${m[3]}-${m[2]}-${m[1]}`,n.h1,n.aula,n.obs); });
   // junta aulas seguidas com a mesma observação
   itens.sort((a,b)=>(a.key+a.ini).localeCompare(b.key+b.ini));
   const uni=[]; itens.forEach(x=>{ const u=uni[uni.length-1]; if(u&&u.key===x.key&&u.sg===x.sg&&u.obs===x.obs) return; uni.push(x); });
@@ -3347,6 +3350,8 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 .sd-aula .sd-k{color:#e8b84a}.sd-aula .sd-s{color:#c8d1de}
 .sd-tmp{background:linear-gradient(150deg,#173455,#0f1d2e 70%);border-color:rgba(147,197,253,.22)}
 .sd-tmp .sd-k{color:#93c5fd}.sd-tmp .sd-s{color:#b9d3f1}
+.sd-aula.sd-prova{box-shadow:0 0 0 1.5px var(--fire),0 14px 30px -18px rgba(192,57,43,.7)}
+.sd-aula.sd-prova .sd-k{color:#f0a49b}
 .sd-tmp.frio{box-shadow:0 0 0 1px rgba(147,197,253,.5),0 14px 30px -18px rgba(96,165,250,.8)}
 .sd-c.vz .sd-n b{font-size:24px;line-height:1.9;opacity:.75}
 /* áudio */
@@ -3650,7 +3655,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
         if(i===0) b=b.filter(x=>x.ini>agora); if(b.length) achou={k,b:b[0],i}; }
       if(achou){ const inst=achou.b.inst||(typeof instDisc==="function"?instDisc(achou.b.sg):"")||"";
         const quando=achou.i===0?"hoje":achou.i===1?"amanhã":dsem(achou.k).slice(0,3);
-        out.push(card("sd-aula","#dia","1ª aula · "+quando,`<b>${esc(achou.b.ini)}</b>`,`${esc(achou.b.sg)}${inst?" · "+esc(inst.split(/\s+/).slice(-1)[0]):""}`,"livro")); }
+        const pv=typeof RX_VA!=="undefined"&&RX_VA.test(achou.b.sg); out.push(card("sd-aula"+(pv?" sd-prova":""),"#dia",(pv?"Prova · ":"1ª aula · ")+quando,`<b>${esc(achou.b.ini)}</b>`,`${esc(typeof semVA==="function"?semVA(achou.b.sg):achou.b.sg)}${pv?" · VA":inst?" · "+esc(inst.split(/\s+/).slice(-1)[0]):""}`,"livro")); }
       else out.push(card("sd-aula","#qts","Aulas",`<b class="txt">—</b>`,"nada marcado","livro",true)); }
     // tempo
     { const k=h>=14?shiftKey(hk,1):hk; const c=typeof climaDe==="function"?climaDe(k):null;
@@ -3769,6 +3774,9 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 .qn-aviso{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;margin:0 0 12px;border-radius:10px;font-size:13.5px;line-height:1.4;border:1px solid color-mix(in srgb,var(--gold) 40%,transparent);background:color-mix(in srgb,var(--gold) 8%,transparent)}
 .qn-aviso b{color:var(--gold)}
 @media (max-width:640px){.qn button .t{display:none}}
+.qva{color:var(--fire)!important;font-weight:800!important}
+td.qva-c,.qva-c{box-shadow:inset 0 0 0 2px var(--fire);background:color-mix(in srgb,var(--fire) 10%,transparent)!important}
+.qva-b{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--fire);color:#fff;font-size:10px;font-weight:800;letter-spacing:.08em;vertical-align:2px;font-family:var(--font-body)}
 </style>
 <script>
 /* ===== QTS: semanas seguintes (e anteriores) montadas pela "Marcação de aulas" ===== */
@@ -3797,6 +3805,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
     const B=base||QTS_ATUAL; if(!B){ orig(); return; }
     let Q=off===0?B:monta(off);
     orig(Q);
+    try{ sec.querySelectorAll("#qts-grade td, #qts-grade b, #qts-grade span, #qts-lista b, #qts-lista span, #qts-leg td").forEach(el=>{ if(el.children.length||el.dataset.va) return; if(RX_VA.test(el.textContent)){ el.dataset.va=1; el.classList.add("qva"); const c=el.closest("td,.ql-it,.ql-a,li"); if(c) c.classList.add("qva-c"); el.insertAdjacentHTML("beforeend",'<i class="qva-b">PROVA</i>'); } }); }catch(e){}
     const ini=Q.ini, fim=addDias(ini,6);
     document.getElementById("qn-t").textContent=`Semana ${Q.semana}`;
     document.getElementById("qn-s").textContent=`${ini.slice(8,10)}/${ini.slice(5,7)} a ${fim.slice(8,10)}/${fim.slice(5,7)}${off===0?" · atual":off===1?" · próxima":off===-1?" · anterior":""}`;
