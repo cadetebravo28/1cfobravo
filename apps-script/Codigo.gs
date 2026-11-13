@@ -436,6 +436,8 @@ function faxinaDoDia(k) {
     if ('2026-' + p2(+d[2]) + '-' + p2(+d[1]) === k) { marca(String(r[1] || '').trim(), 9); const t = String(r[2] || '').trim(); if (t) marca(t, 9); } }); } catch (e) {}
   return out;
 }
+// Provas avisadas pela turma que ainda não estão na planilha
+const PROVAS_EXTRA = [{ k: '2026-11-19', sg: 'PSE', ini: 'horário a confirmar' }];
 // Aulas do dia (mesmas para todos)
 function aulasDia(k) {
   let rows = [];
@@ -444,7 +446,8 @@ function aulasDia(k) {
     .filter(r => r && r.k === k && r.sg).sort((a, b) => a.ini.localeCompare(b.ini)); } catch (e) {}
   const prova = rows.find(r => r.va) || rows.find(r => /prova|avalia|\bv\s*[.\/\-]?\s*a\.?(?![a-zà-ú])|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico/i.test(r.obs + ' ' + r.sg));
   const sig = []; rows.forEach(r => { if (sig.indexOf(r.sg) < 0) sig.push(r.sg); });
-  return { primeira: rows[0] || null, prova: prova || null, sig: sig };
+  const extra = PROVAS_EXTRA.find(p => p.k === k && !rows.some(r => r.sg.replace(/\s*V\s*[.\/\-]?\s*A\.?\s*\d?$/i, '') === p.sg));
+  return { primeira: rows[0] || null, prova: prova || (extra ? { sg: extra.sg, ini: extra.ini, obs: '' } : null), sig: sig };
 }
 function climaDia(k) {
   try { const j = JSON.parse(UrlFetchApp.fetch('https://api.open-meteo.com/v1/forecast?latitude=-25.535&longitude=-49.206&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=3').getContentText());

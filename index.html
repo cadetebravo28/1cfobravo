@@ -1676,6 +1676,9 @@ function aplicaFax9(values){
 /* ===== Aba Amanhã ===== */
 let MARC=[]; let QTS_ATUAL=null;
 const DD={key:null};
+/* Provas informadas pela turma que ainda não estão na planilha (somem sozinhas quando a planilha marcar o mesmo dia) */
+const PROVAS_EXTRA=[{key:"2026-11-19",sg:"PSE",ini:"",obs:"VA · Psicologia das Emergências · horário a confirmar"}];
+function provasExtra(){ return PROVAS_EXTRA.filter(p=>!MARC.some(r=>r.key===p.key&&semVA(r.sg)===p.sg)); }
 function guardarMarc(rows){ MARC=(rows||[]).map(r=>{const d=String(r[0]||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); let sg=String(r[3]||"").trim(); const va=/^(TRUE|VERDADEIRO)$/i.test(String(r[6]||"").trim()); if(va&&sg&&!RX_VA.test(sg)) sg+=" VA"; return d?{key:`${d[3]}-${pad(+d[2])}-${pad(+d[1])}`,ini:String(r[1]||""),fim:String(r[2]||""),sg,va,obs:String(r[4]||"").trim(),inst:String(r[5]||"").trim()}:null;}).filter(Boolean); }
 function aulasDoDia(key){
   let rows=MARC.filter(r=>r.key===key&&r.sg).sort((a,b)=>a.ini.localeCompare(b.ini));
@@ -1887,6 +1890,7 @@ function renderAval(){
   const itens=[], vistos=new Set();
   const add=(key,ini,sg,obs)=>{ const va=RX_VA.test(sg)||RX_VA.test(obs||""); if((!obs&&!va)||key<hoje||key>lim) return; if(!obs) obs="VA · avaliação"; const id=key+"|"+sg+"|"+obs; if(vistos.has(id)) return; vistos.add(id); itens.push({key,ini,sg,obs,prova:RX_PROVA.test(obs)||RX_PROVA.test(sg)}); };
   MARC.forEach(r=>add(r.key,r.ini,r.sg,r.obs));
+  try{ provasExtra().forEach(p=>add(p.key,p.ini,p.sg+" VA",p.obs)); }catch(e){}
   const Q=QTS_ATUAL; if(Q&&Q.slots) Q.slots.forEach(sl=>{ if(sl.brk) return; (sl.c||[]).forEach((v,i)=>{ if(v&&RX_VA.test(v)) add(shiftKey(Q.ini,i),sl.ini,v,""); }); });
   if(Q&&Q.notas) Q.notas.forEach(n=>{ const m=String(n.data).match(/(\d{2})\/(\d{2})\/(\d{4})/); if(m) add(`${m[3]}-${m[2]}-${m[1]}`,n.h1,n.aula,n.obs); });
   // junta aulas seguidas com a mesma observação
@@ -3870,7 +3874,7 @@ td.qva-c,.qva-c{box-shadow:inset 0 0 0 2px var(--fire);background:color-mix(in s
   const hojeK=()=>{ try{ return keyOf(partsSP(nowSP())); }catch(e){ return new Date().toISOString().slice(0,10); } };
   let cm=hojeK().slice(0,7);
   const mesAdd=(ym,n)=>{ let y=+ym.slice(0,4), m=+ym.slice(5,7)-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; return `${y}-${p2(m+1)}`; };
-  function porDia(){ const o={}; MARC.forEach(r=>{ if(!r.sg) return; (o[r.key]=o[r.key]||[]).push(r); }); return o; }
+  function porDia(){ const o={}; MARC.forEach(r=>{ if(!r.sg) return; (o[r.key]=o[r.key]||[]).push(r); }); try{ provasExtra().forEach(p=>(o[p.key]=o[p.key]||[]).push({key:p.key,ini:p.ini||"—",sg:p.sg+" VA",va:true})); }catch(e){} return o; }
   function desenhaCal(){
     const D=porDia(), reais=Object.keys(D).filter(k=>D[k].some(r=>!VAZIO.test(r.sg))).sort();
     const minM="2026-05", maxM=reais.length?reais[reais.length-1].slice(0,7):mesAdd(hojeK().slice(0,7),2);
