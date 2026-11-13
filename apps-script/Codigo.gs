@@ -437,7 +437,7 @@ function faxinaDoDia(k) {
   return out;
 }
 // Provas avisadas pela turma que ainda não estão na planilha
-const PROVAS_EXTRA = [{ k: '2026-11-19', sg: 'PSE', ini: 'horário a confirmar' }];
+const PROVAS_EXTRA = [{ k: '2026-11-19', sg: 'PSE', ini: '13:30' }];
 // Aulas do dia (mesmas para todos)
 function aulasDia(k) {
   let rows = [];
