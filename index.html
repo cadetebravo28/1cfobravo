@@ -1676,7 +1676,7 @@ function aplicaFax9(values){
 /* ===== Aba Amanhã ===== */
 let MARC=[]; let QTS_ATUAL=null;
 const DD={key:null};
-function guardarMarc(rows){ MARC=(rows||[]).map(r=>{const d=String(r[0]||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);return d?{key:`${d[3]}-${pad(+d[2])}-${pad(+d[1])}`,ini:String(r[1]||""),fim:String(r[2]||""),sg:String(r[3]||"").trim(),obs:String(r[4]||"").trim(),inst:String(r[5]||"").trim()}:null;}).filter(Boolean); }
+function guardarMarc(rows){ MARC=(rows||[]).map(r=>{const d=String(r[0]||"").match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); let sg=String(r[3]||"").trim(); const va=/^(TRUE|VERDADEIRO)$/i.test(String(r[6]||"").trim()); if(va&&sg&&!RX_VA.test(sg)) sg+=" VA"; return d?{key:`${d[3]}-${pad(+d[2])}-${pad(+d[1])}`,ini:String(r[1]||""),fim:String(r[2]||""),sg,va,obs:String(r[4]||"").trim(),inst:String(r[5]||"").trim()}:null;}).filter(Boolean); }
 function aulasDoDia(key){
   let rows=MARC.filter(r=>r.key===key&&r.sg).sort((a,b)=>a.ini.localeCompare(b.ini));
   if(!rows.length&&QTS_ATUAL){ // reserva: QTS da semana
@@ -2082,9 +2082,9 @@ function watchT(server,tool,input,handler,opts){
 /* Controle de CH */
 function watchMarcacao(){
   const ini=Date.UTC(2026,4,11), hoje=Date.now();
-  const fim=Math.min(13876, 2+Math.ceil((hoje-ini)/DIA+10)*15);
-  watchT(GS,"get_values",{spreadsheetId:SHEET_ID,range:`'Marcação de aulas'!C2:H${fim}`},ev=>{
-    if(ev.type==="data"){ const v=unwrap(ev.result).values; contaDadas(v); guardarMarc(v.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5]])); renderEmenta(); renderDiaTab(); }
+  const fim=14000;
+  watchT(GS,"get_values",{spreadsheetId:SHEET_ID,range:`'Marcação de aulas'!C2:M${fim}`},ev=>{
+    if(ev.type==="data"){ const v=unwrap(ev.result).values; contaDadas(v); guardarMarc(v.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[10]])); renderEmenta(); renderDiaTab(); try{window.qtsMarcAtualizada&&window.qtsMarcAtualizada();}catch(e){} }
     else if(DENIAL.has(ev.error.code)){ DADAS=DADAS_SALVO; DADAS_ATE=DADAS_SALVO_ATE; renderEmenta(); }
   },{refetchInterval:600000});
 }
@@ -3777,6 +3777,35 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
 .qva{color:var(--fire)!important;font-weight:800!important}
 td.qva-c,.qva-c{box-shadow:inset 0 0 0 2px var(--fire);background:color-mix(in srgb,var(--fire) 10%,transparent)!important}
 .qva-b{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:4px;background:var(--fire);color:#fff;font-size:10px;font-weight:800;letter-spacing:.08em;vertical-align:2px;font-family:var(--font-body)}
+.qm{display:flex;align-items:center;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+.qm button{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.qm button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.qm a{margin-left:auto;font-size:12.5px;color:var(--muted);text-decoration:none;border-bottom:1px dotted currentColor}
+#v-qts.cal-on > :not(.sec-head):not(.qm):not(.qcal):not(style):not(script){display:none!important}
+.qcal{display:grid;gap:10px}
+.qc-h{display:flex;align-items:center;gap:8px}
+.qc-h button{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);font-size:18px;cursor:pointer}
+.qc-h button:disabled{opacity:.3;cursor:default}
+.qc-h b{flex:1;text-align:center;font-family:var(--font-display);font-size:19px;font-weight:700;text-transform:capitalize;letter-spacing:.02em}
+.qc-g{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.qc-w{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:center;padding:2px 0}
+.qc-d{min-width:0;min-height:74px;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:4px;display:flex;flex-direction:column;gap:2px;text-align:left;font:inherit;color:var(--fg);cursor:pointer;overflow:hidden}
+.qc-d.fora{opacity:.28;cursor:default}
+.qc-d.vz{background:transparent}
+.qc-d.hj{box-shadow:inset 0 0 0 2px var(--gold)}
+.qc-d.tem-va{box-shadow:inset 0 0 0 2px var(--fire)}
+.qc-d > span{font-size:12px;font-weight:700;color:var(--muted)}
+.qc-d.hj > span{color:var(--gold)}
+.qc-d i{font-style:normal;display:block;font-size:9.5px;font-weight:700;line-height:1.3;padding:1px 3px;letter-spacing:-.01em;border-radius:4px;background:color-mix(in srgb,var(--fg) 8%,transparent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc-d i.va{background:var(--fire);color:#fff}
+.qc-d i.fe{background:transparent;color:var(--muted);padding:0}
+.qc-d em{font-style:normal;font-size:10px;color:var(--muted)}
+.qc-va{border:1px solid color-mix(in srgb,var(--fire) 45%,transparent);border-radius:10px;padding:10px 12px;display:grid;gap:6px}
+.qc-va h4{margin:0;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--fire)}
+.qc-va div{display:flex;gap:10px;font-size:13.5px;align-items:baseline}
+.qc-va div b{font-family:var(--font-mono,monospace);font-size:12.5px;min-width:72px;color:var(--muted);font-weight:600}
+.qc-nt{font-size:12px;color:var(--muted);margin:0}
+@media (min-width:700px){.qc-d{min-height:96px;padding:6px}.qc-d i{font-size:11px}}
 </style>
 <script>
 /* ===== QTS: semanas seguintes (e anteriores) montadas pela "Marcação de aulas" ===== */
@@ -3796,21 +3825,32 @@ td.qva-c,.qva-c{box-shadow:inset 0 0 0 2px var(--fire);background:color-mix(in s
     const ini=addDias(B.ini,7*o), dias=[0,1,2,3,4,5,6].map(i=>addDias(ini,i));
     const rows=MARC.filter(r=>dias.includes(r.key)&&r.sg&&!VAZIO.test(r.sg));
     const slots=B.slots.map(s=>s.brk?{brk:s.brk}:{h:s.h,ini:s.ini,c:dias.map(k=>{ const r=rows.find(x=>x.key===k&&x.ini===s.ini); return r?r.sg:""; })});
-    const sgs=[...new Set(rows.map(r=>r.sg))].sort();
-    const disc=sgs.map(sg=>({sg,nome:nomeDisc(sg)||"",inst:(rows.find(r=>r.sg===sg&&r.inst)||{}).inst||instDisc(sg)||"",ha:String(rows.filter(r=>r.sg===sg).length)}));
+    const sgs=[...new Set(rows.map(r=>semVA(r.sg)))].sort();
+    const disc=sgs.map(sg=>({sg,nome:nomeDisc(sg)||"",inst:(rows.find(r=>semVA(r.sg)===sg&&r.inst)||{}).inst||instDisc(sg)||"",ha:String(rows.filter(r=>semVA(r.sg)===sg).length)}));
     const notas=rows.filter(r=>r.obs).map(r=>({data:br(r.key),h1:r.ini,h2:r.fim,aula:r.sg,obs:r.obs}));
     return {turma:B.turma,semana:(B.semana||0)+o,ini,iniTxt:br(ini),fimTxt:br(dias[6]),slots,disc,notas,_n:rows.length};
   }
+  function comVA(B){
+    const dias=[0,1,2,3,4,5,6].map(i=>addDias(B.ini,i));
+    if(!MARC.some(r=>r.va&&dias.includes(r.key))) return B;
+    return Object.assign({},B,{slots:B.slots.map(s=>s.brk?s:Object.assign({},s,{c:(s.c||[]).map((v,i)=>{ if(!v||RX_VA.test(v)) return v; const m=MARC.find(x=>x.va&&x.key===dias[i]&&x.ini===s.ini); return m?v+" VA":v; })}))});
+  }
+  function limites(){
+    const B=base||QTS_ATUAL; const w=k=>Math.floor((Date.UTC(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10))-Date.UTC(+B.ini.slice(0,4),+B.ini.slice(5,7)-1,+B.ini.slice(8,10)))/864e5/7);
+    const reais=MARC.filter(r=>r.sg&&!VAZIO.test(r.sg)).map(r=>r.key).sort();
+    return {min:Math.min(-8,w("2026-05-11")), max:Math.max(12,reais.length?w(reais[reais.length-1]):0)};
+  }
+  window.qtsIrSemana=function(o){ off=o; desenha(); };
   function desenha(){
     const B=base||QTS_ATUAL; if(!B){ orig(); return; }
-    let Q=off===0?B:monta(off);
+    let Q=off===0?comVA(B):monta(off);
     orig(Q);
     try{ sec.querySelectorAll("#qts-grade td, #qts-grade b, #qts-grade span, #qts-lista b, #qts-lista span, #qts-leg td").forEach(el=>{ if(el.children.length||el.dataset.va) return; if(RX_VA.test(el.textContent)){ el.dataset.va=1; el.classList.add("qva"); const c=el.closest("td,.ql-it,.ql-a,li"); if(c) c.classList.add("qva-c"); el.insertAdjacentHTML("beforeend",'<i class="qva-b">PROVA</i>'); } }); }catch(e){}
     const ini=Q.ini, fim=addDias(ini,6);
     document.getElementById("qn-t").textContent=`Semana ${Q.semana}`;
     document.getElementById("qn-s").textContent=`${ini.slice(8,10)}/${ini.slice(5,7)} a ${fim.slice(8,10)}/${fim.slice(5,7)}${off===0?" · atual":off===1?" · próxima":off===-1?" · anterior":""}`;
     document.getElementById("qn-hoje").hidden=off===0;
-    document.getElementById("qn-ant").disabled=off<=-8; document.getElementById("qn-prox").disabled=off>=12;
+    const L=limites(); document.getElementById("qn-ant").disabled=off<=L.min; document.getElementById("qn-prox").disabled=off>=L.max;
     if(off===0) aviso.hidden=true;
     else { aviso.hidden=false; aviso.innerHTML=Q._n?`<span>📋</span><span><b>Prévia montada pela Marcação de aulas.</b> O QTS oficial desta semana ainda não saiu, então horários e salas podem mudar.</span>`:`<span>🗓️</span><span><b>Semana ainda não marcada.</b> A coordenação ainda não lançou aulas para este período. A grade aparece aqui assim que forem marcadas.</span>`; }
     const live=document.getElementById("qts-live"); if(live) live.hidden=off!==0;
@@ -3819,6 +3859,42 @@ td.qva-c,.qva-c{box-shadow:inset 0 0 0 2px var(--fire);background:color-mix(in s
   nav.addEventListener("click",e=>{ if(e.target.closest("#qn-ant")) off--; else if(e.target.closest("#qn-prox")) off++; else if(e.target.closest("#qn-hoje")) off=0; else return; desenha(); });
   addEventListener("hashchange",()=>{ if(location.hash==="#qts"&&off!==0){ /* mantém a semana escolhida */ } });
   try{ desenha(); }catch(e){}
+
+  /* ===== Calendário (aba "Marcação de aulas", até o fim do curso) ===== */
+  const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+  const modo=document.createElement("div"); modo.className="qm";
+  modo.innerHTML=`<button type="button" data-m="sem" aria-pressed="true">Semana</button><button type="button" data-m="cal" aria-pressed="false">Calendário</button><a href="https://docs.google.com/spreadsheets/d/1I01qBi7HCdUHcmlG5CIbDY3UKjMqlGFrd3cX-fG48e8/edit#gid=694636516" target="_blank" rel="noopener">Abrir planilha ↗</a>`;
+  head.insertAdjacentElement("afterend",modo);
+  const cal=document.createElement("div"); cal.className="qcal"; cal.hidden=true; modo.insertAdjacentElement("afterend",cal);
+  const hojeK=()=>{ try{ return keyOf(partsSP(nowSP())); }catch(e){ return new Date().toISOString().slice(0,10); } };
+  let cm=hojeK().slice(0,7);
+  const mesAdd=(ym,n)=>{ let y=+ym.slice(0,4), m=+ym.slice(5,7)-1+n; y+=Math.floor(m/12); m=((m%12)+12)%12; return `${y}-${p2(m+1)}`; };
+  function porDia(){ const o={}; MARC.forEach(r=>{ if(!r.sg) return; (o[r.key]=o[r.key]||[]).push(r); }); return o; }
+  function desenhaCal(){
+    const D=porDia(), reais=Object.keys(D).filter(k=>D[k].some(r=>!VAZIO.test(r.sg))).sort();
+    const minM="2026-05", maxM=reais.length?reais[reais.length-1].slice(0,7):mesAdd(hojeK().slice(0,7),2);
+    if(cm<minM) cm=minM; if(cm>maxM) cm=maxM;
+    const y=+cm.slice(0,4), m=+cm.slice(5,7), pri=`${cm}-01`, wd=(new Date(Date.UTC(y,m-1,1,12)).getUTCDay()+6)%7;
+    const ini=addDias(pri,-wd), hj=hojeK(), cels=[], vas=[];
+    for(let i=0;i<42;i++){ const k=addDias(ini,i); if(i>=35&&k.slice(0,7)!==cm) break;
+      const rs=(D[k]||[]).filter(r=>!VAZIO.test(r.sg)).sort((a,b)=>a.ini.localeCompare(b.ini));
+      const fe=rs.find(r=>/^FERIADO/i.test(r.sg)); const ul=[]; rs.forEach(r=>{ if(/^FERIADO/i.test(r.sg)) return; const sg=semVA(r.sg), va=r.va||RX_VA.test(r.sg); const u=ul.find(x=>x.sg===sg); if(u){ u.va=u.va||va; } else ul.push({sg,va}); if(va&&k.slice(0,7)===cm) vas.push({k,sg,ini:r.ini}); });
+      const fora=k.slice(0,7)!==cm, tva=ul.some(u=>u.va);
+      const chips=fe?`<i class="fe">Feriado</i>`:ul.slice(0,3).map(u=>`<i class="${u.va?"va":""}">${esc(u.sg)}</i>`).join("")+(ul.length>3?`<em>+${ul.length-3}</em>`:"");
+      cels.push(`<button type="button" class="qc-d${fora?" fora":""}${!rs.length?" vz":""}${k===hj?" hj":""}${tva&&!fora?" tem-va":""}" data-k="${k}"${fora?" tabindex=\"-1\"":""} aria-label="${k.slice(8,10)}/${k.slice(5,7)}${ul.length?": "+ul.map(u=>u.sg+(u.va?" VA":"")).join(", "):""}"><span>${+k.slice(8,10)}</span>${chips}</button>`); }
+    const vu=[]; vas.forEach(v=>{ const u=vu[vu.length-1]; if(u&&u.k===v.k&&u.sg===v.sg) return; vu.push(v); });
+    cal.innerHTML=`<div class="qc-h"><button type="button" data-n="-1" aria-label="Mês anterior"${cm<=minM?" disabled":""}>‹</button><b>${MESES[m-1]} ${y}</b><button type="button" data-n="1" aria-label="Próximo mês"${cm>=maxM?" disabled":""}>›</button></div>
+      <div class="qc-g">${["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"].map(d=>`<div class="qc-w">${d}</div>`).join("")}${cels.join("")}</div>
+      ${vu.length?`<div class="qc-va"><h4>Provas (VA) em ${MESES[m-1]}</h4>${vu.map(v=>`<div><b>${DSEM[new Date(Date.UTC(+v.k.slice(0,4),+v.k.slice(5,7)-1,+v.k.slice(8,10),12)).getUTCDay()].slice(0,3)} ${v.k.slice(8,10)}/${v.k.slice(5,7)}</b><span>${esc(v.sg)} · ${esc(v.ini)}</span></div>`).join("")}</div>`:""}
+      <p class="qc-nt">Direto da aba “Marcação de aulas”. Toque num dia para abrir a semana. Em vermelho: matéria com VA marcado (prova).</p>`;
+  }
+  function setModo(c){ sec.classList.toggle("cal-on",c); cal.hidden=!c; modo.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.m==="cal")===c))); if(c) desenhaCal(); }
+  modo.addEventListener("click",e=>{ const b=e.target.closest("button[data-m]"); if(b) setModo(b.dataset.m==="cal"); });
+  cal.addEventListener("click",e=>{ const n=e.target.closest("[data-n]"); if(n){ cm=mesAdd(cm,+n.dataset.n); desenhaCal(); return; }
+    const d=e.target.closest(".qc-d:not(.fora)"); if(!d) return; const B=base||QTS_ATUAL; if(!B) return;
+    const k=d.dataset.k, dd=(Date.UTC(+k.slice(0,4),+k.slice(5,7)-1,+k.slice(8,10))-Date.UTC(+B.ini.slice(0,4),+B.ini.slice(5,7)-1,+B.ini.slice(8,10)))/864e5;
+    off=Math.floor(dd/7); setModo(false); desenha(); sec.scrollIntoView({block:"start",behavior:"smooth"}); });
+  window.qtsMarcAtualizada=function(){ try{ if(!cal.hidden) desenhaCal(); else if(off!==0||MARC.some(r=>r.va)) desenha(); }catch(e){} };
 })();
 </script>
 
