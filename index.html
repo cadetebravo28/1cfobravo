@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a111b"><script>try{var _t=localStorage.getItem("aloja_tema");if(_t==="claro"||_t==="escuro"||_t==="bordo")document.documentElement.setAttribute("data-tema",_t)}catch(e){}</script>
+<meta name="theme-color" content="#0a111b"><script>try{if(!localStorage.getItem("aloja_tema_bordo")){localStorage.setItem("aloja_tema","bordo");localStorage.setItem("aloja_tema_bordo","1")}var _t=localStorage.getItem("aloja_tema")||"bordo";if(_t==="claro"||_t==="escuro"||_t==="bordo")document.documentElement.setAttribute("data-tema",_t)}catch(e){}</script>
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -3114,7 +3114,7 @@ nav.tabs a[data-v="mural"]{position:relative}
   const LUA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
   const AUTO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>';
   const VINHO='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="#7a1d2e" stroke="#f0c35a" stroke-width="1.6"/></svg>';
-  const atual=()=>{ try{ return localStorage.getItem(K)||"auto"; }catch(e){ return "auto"; } };
+  const atual=()=>{ try{ return localStorage.getItem(K)||"bordo"; }catch(e){ return "bordo"; } };
   function aplica(t){ if(t==="claro"||t==="escuro"||t==="bordo") R.dataset.tema=t; else delete R.dataset.tema; try{ localStorage.setItem(K,t); }catch(e){} icone(); }
   const b=document.createElement("button"); b.type="button"; b.className="ib-tema"; b.id="ib-tema";
   function icone(){ const t=atual(); b.innerHTML=t==="claro"?SOL:t==="escuro"?LUA:t==="bordo"?VINHO:AUTO; b.setAttribute("aria-label","Tema: "+(t==="auto"?"automático":t==="bordo"?"bordô":t)); b.title="Tema: "+(t==="auto"?"automático (segue o celular)":t==="bordo"?"bordô":t); }
@@ -3736,7 +3736,7 @@ body{background-image:radial-gradient(120% 420px at 50% 0%,rgba(40,58,86,.55),tr
   function abreMais(){
     fechaMais(); const me=eu();
     const nt=$("#wl-notif"); const ntTxt=!nt?"":nt.classList.contains("nt-on")?"ativas":nt.textContent.includes("bloque")?"bloqueadas":"ativar";
-    let tm="Automático"; try{ tm={claro:"Claro",escuro:"Escuro"}[localStorage.getItem("aloja_tema")]||"Automático"; }catch(e){}
+    let tm="Automático"; try{ tm={claro:"Claro",escuro:"Escuro",bordo:"Bordô"}[localStorage.getItem("aloja_tema")||"bordo"]||"Automático"; }catch(e){}
     const s=document.createElement("div"); s.className="v2-sheet"; s.setAttribute("role","dialog"); s.setAttribute("aria-label","Mais opções");
     const g=(id,ic,txt,bg,cor)=>`<button type="button" data-go="${id}"><span style="background:${bg};color:${cor}">${SVG(IC[ic])}</span>${txt}</button>`;
     s.innerHTML=`<div class="v2-sheet-b"><span class="grab"></span><h2>Mais</h2>
