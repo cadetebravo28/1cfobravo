@@ -19,7 +19,7 @@ const FONTES = {
   cont:    { id: ESC, aba: 'Contagem',                    a1: 'A4:L60' },
   qts:     { id: CFO, aba: 'Quadro de Trabalho Semanal',  a1: 'A1:J80' },
   ctrl:    { id: CFO, aba: 'Controle de CH',              a1: 'A1:G150' },
-  marc:    { id: CFO, aba: 'Marcação de aulas',           colunas: [3, 8], desde: 2 },
+  marc:    { id: CFO, aba: 'Marcação de aulas',           colunas: [3, 13], desde: 2 },
   fax9:    { id: FX9, aba: 'FAXINA DIÁRIA',               a1: 'A1:D200' },
   fun:     { id: FUN, aba: 'FUNREBRAVO',                  a1: 'A1:N80' },
   fun_s:   { id: FUN, aba: 'SAÍDAS FUNREBRAVO',           a1: 'A1:H400' },
@@ -90,7 +90,9 @@ function lerFonte(k) {
     const n = Math.max(1, sh.getLastRow() - f.desde + 1);
     rg = sh.getRange(f.desde, f.colunas[0], n, f.colunas[1] - f.colunas[0] + 1);
   }
-  const out = { values: aparar(rg.getDisplayValues()), at: new Date().toISOString() };
+  let vals = rg.getDisplayValues();
+  if (k === 'marc') vals = vals.map(r => r.map(c => /^(FALSE|FALSO)$/i.test(c) ? '' : c));   // coluna M (VA): só fica o marcado
+  const out = { values: aparar(vals), at: new Date().toISOString() };
   try { cache.put('v:' + k, JSON.stringify(out), 120); } catch (e) { /* grande demais para o cache */ }
   return out;
 }
