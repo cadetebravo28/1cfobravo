@@ -442,7 +442,7 @@ function aulasDia(k) {
   try { rows = (lerFonte('marc').values || []).map(r => { const d = String(r[0] || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     return d ? { k: d[3] + '-' + p2(+d[2]) + '-' + p2(+d[1]), ini: String(r[1] || ''), sg: String(r[3] || '').trim(), obs: String(r[4] || '').trim(), va: !!String(r[10] || '').trim() } : null; })
     .filter(r => r && r.k === k && r.sg).sort((a, b) => a.ini.localeCompare(b.ini)); } catch (e) {}
-  const prova = rows.find(r => r.va) || rows.find(r => /prova|avalia|\bv[.\/]?a\.?\b|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico/i.test(r.obs + ' ' + r.sg));
+  const prova = rows.find(r => r.va) || rows.find(r => /prova|avalia|\bv\s*[.\/\-]?\s*a\.?(?![a-zà-ú])|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico/i.test(r.obs + ' ' + r.sg));
   const sig = []; rows.forEach(r => { if (sig.indexOf(r.sg) < 0) sig.push(r.sg); });
   return { primeira: rows[0] || null, prova: prova || null, sig: sig };
 }

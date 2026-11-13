@@ -1688,8 +1688,8 @@ function aulasDoDia(key){
   rows.forEach(r=>{const b=blocos[blocos.length-1]; if(b&&b.sg===r.sg&&b.obs===r.obs) {b.fim=r.fim;b.n++;} else blocos.push({...r,n:1});});
   return blocos;
 }
-const RX_VA=/(^|[^A-Za-zÀ-ú])V[.\/]?A\.?\s*\d?(?=$|[^A-Za-zÀ-ú])/i;
-const semVA=sg=>String(sg||"").replace(/\s*[-–(\/]?\s*\bV[.\/]?A\.?\s*\d?\)?\s*$/i,"").trim();
+const RX_VA=/(^|[^A-Za-zÀ-ú])V\s*[.\/\-]?\s*A\.?\s*\d?(?=$|[^A-Za-zÀ-ú])/i;
+const semVA=sg=>String(sg||"").replace(/\s*[-–(\/]?\s*\bV\s*[.\/\-]?\s*A\.?\s*\d?\)?\s*$/i,"").trim();
 function nomeDisc(sg){ sg=semVA(sg); const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); if(i!==undefined) return CURR[i].n; const q=(QTS_ATUAL&&QTS_ATUAL.disc||[]).find(d=>d.sg===sg); return q?q.nome:""; }
 function instDisc(sg){ sg=semVA(sg); const i=Object.keys(EM.map).find(k=>EM.map[k].sig===sg); return i!==undefined?EM.map[i].inst:""; }
 function renderDiaTab(){
@@ -1880,7 +1880,7 @@ document.addEventListener("click",e=>{ const b=null; if(!b) return;
   const nr=+b.dataset.nr; EU=EU===nr?null:nr; try{ EU?localStorage.setItem("aloja_eu_"+ALOJA,EU):localStorage.removeItem("aloja_eu_"+ALOJA); }catch(_){}
   MILITARES.forEach(m=>m.eu=m.nr===EU); ESC.me=EU; if(EU) AN.sel=EU;
   try{renderCards();}catch(_){} try{ if(ESC.ready) renderEscalaTudo(); }catch(_){} try{renderAnot();}catch(_){} try{renderDiaTab();}catch(_){} renderPainelExtras(); });
-const RX_PROVA=/prova|avalia|\bv[.\/]?a\.?\b|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico|semin[áa]rio/i;
+const RX_PROVA=/prova|avalia|\bv\s*[.\/\-]?\s*a\.?(?![a-zà-ú])|\bvf\b|\bvs\b|exame|\btaf\b|verifica[çc]|recupera|teste f[íi]sico|semin[áa]rio/i;
 function renderAval(){
   const box=document.getElementById("av-provas"); if(!box) return;
   const hoje=keyOf(partsSP(nowSP())), lim=shiftKey(hoje,14);
