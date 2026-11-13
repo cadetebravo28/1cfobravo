@@ -1855,8 +1855,9 @@ function renderAlerts(){
     // FUNREBRAVO
     try{ const D=funDados(); const p=D&&D.pess.find(x=>x.nr===EU); if(p){ const pd=funPend(p,D.meses); if(pd.length) out.push(W("gold","fun",`<b>FUNREBRAVO: pendente em ${pd.join(", ")}</b><small>veja na aba Fundo</small>`,"#fundo")); } }catch(e){}
     // provas próximas
-    try{ const pv=[...document.querySelectorAll("#av-provas .av-it")].length;
-      if(pv) out.push(W("violet","prova",`<b>${pv} prova${pv>1?"s":""} nos próximos 14 dias</b><small>veja em Avaliações e avisos</small>`)); }catch(e){}
+    try{ const L=window.AV_PROVAS||[], pv=L.length;
+      if(pv){ const x=L[0], [yy,mm,dd]=x.key.split("-").map(Number), wd=DSEM[new Date(Date.UTC(yy,mm-1,dd,12)).getUTCDay()].slice(0,3).toLowerCase(), q=x.key===hojeK?"hoje":x.key===shiftKey(hojeK,1)?"amanhã":`${wd} ${pad(dd)}/${pad(mm)}`;
+        out.push(W("violet","prova",`<b>Prova ${q}: ${esc(semVA(x.sg))}${x.ini?` · ${esc(x.ini)}`:""}</b><small>${pv>1?`+${pv-1} outra${pv>2?"s":""} nos próximos 14 dias · `:""}${esc(x.obs)}</small>`,"#qts")); } }catch(e){}
   }
   // anotação de alguém do alojamento
   if(AN.week){ const nos=AN.week.itens.filter(x=>NOSSOS.has(x.nr)&&x.nr!==EU&&!x.pos); if(nos.length){ const nomes=[...new Set(nos.map(x=>x.nome))];
@@ -1890,7 +1891,7 @@ function renderAval(){
   if(Q&&Q.notas) Q.notas.forEach(n=>{ const m=String(n.data).match(/(\d{2})\/(\d{2})\/(\d{4})/); if(m) add(`${m[3]}-${m[2]}-${m[1]}`,n.h1,n.aula,n.obs); });
   // junta aulas seguidas com a mesma observação
   itens.sort((a,b)=>(a.key+a.ini).localeCompare(b.key+b.ini));
-  const uni=[]; itens.forEach(x=>{ const u=uni[uni.length-1]; if(u&&u.key===x.key&&u.sg===x.sg&&u.obs===x.obs) return; uni.push(x); });
+  const uni=[]; itens.forEach(x=>{ const u=uni[uni.length-1]; if(u&&u.key===x.key&&u.sg===x.sg&&u.obs===x.obs) return; uni.push(x); }); window.AV_PROVAS=uni.filter(x=>x.prova);
   const dt=k=>{ const [y,m,d]=k.split("-").map(Number); const wd=new Date(Date.UTC(y,m-1,d,12)).getUTCDay(); return `<span class="av-dt"><small>${DSEM[wd].slice(0,3)}</small><b>${pad(d)}/${pad(m)}</b></span>`; };
   const li=x=>`<div class="av-it${x.prova?" prova":""}">${dt(x.key)}<span class="t"><b>${esc(x.sg)}</b>${x.ini?` · ${esc(x.ini)}`:""}<small>${esc(x.obs)}</small></span></div>`;
   const provas=uni.filter(x=>x.prova), avisos=uni.filter(x=>!x.prova);
@@ -2084,7 +2085,7 @@ function watchMarcacao(){
   const ini=Date.UTC(2026,4,11), hoje=Date.now();
   const fim=14000;
   watchT(GS,"get_values",{spreadsheetId:SHEET_ID,range:`'Marcação de aulas'!C2:M${fim}`},ev=>{
-    if(ev.type==="data"){ const v=unwrap(ev.result).values; contaDadas(v); guardarMarc(v.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[10]])); renderEmenta(); renderDiaTab(); try{window.qtsMarcAtualizada&&window.qtsMarcAtualizada();}catch(e){} }
+    if(ev.type==="data"){ const v=unwrap(ev.result).values; contaDadas(v); guardarMarc(v.map(r=>[r[0],r[1],r[2],r[3],r[4],r[5],r[10]])); renderEmenta(); renderDiaTab(); try{window.qtsMarcAtualizada&&window.qtsMarcAtualizada();}catch(e){} try{renderPainelExtras();}catch(e){} }
     else if(DENIAL.has(ev.error.code)){ DADAS=DADAS_SALVO; DADAS_ATE=DADAS_SALVO_ATE; renderEmenta(); }
   },{refetchInterval:600000});
 }
