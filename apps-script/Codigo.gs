@@ -11,7 +11,7 @@ const ESC = '1e-rdIZ-7FmEV1dfCrREXqNWEykaxefdZeWRPv_6eCLY';   // Escala Aspirant
 const CFO = '13dzAllifFI5G-VubRGK3OM2WlN9qVyJgUma0JhwxyC4';   // 1º CFO BM 2026 - BRAVO
 const FX9 = '1qfS_bQqVxjGjfUHP9abjqmwg6pU9F0XgP7adtdvqSkA';   // Faxina Aloja 9
 const FUN = '1K5xIBsUxgcVW48XSGLplXat0OfjCA8JMvf50RnEGr0A';   // Pelotão Bravo (FUNREBRAVO)
-const ANO = '1pThqWbY11CR697tpHBBwmay680qH5hOysHM0VYDjaOc';   // Anotações Cadetes
+const ANO = '1vO9WEzk7cObqeIixn5xwOvy-DwUiKpxVi63x2Q66kao';   // Anotações Cadetes
 
 const FONTES = {
   escala:  { id: ESC, aba: 'Escala',                      linhas: [3, 70] },
