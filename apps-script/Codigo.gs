@@ -8,7 +8,7 @@ const USUARIO = 'COLOQUE_O_USUARIO';
 const SENHA   = 'COLOQUE_A_SENHA';
 const ADMIN   = 'COLOQUE_A_SENHA_DE_MODERACAO';   // senha de moderação do mural
 const ESC = '1Fll0Q0Vt--jNqC1awyE2A-7JpKZcUhnpCBy-ghPPH1k';   // Escala Aspirantes 2028
-const CFO = '1I01qBi7HCdUHcmlG5CIbDY3UKjMqlGFrd3cX-fG48e8';   // 1º CFO BM 2026 - BRAVO
+const CFO = '13dzAllifFI5G-VubRGK3OM2WlN9qVyJgUma0JhwxyC4';   // 1º CFO BM 2026 - BRAVO
 const FX9 = '1qfS_bQqVxjGjfUHP9abjqmwg6pU9F0XgP7adtdvqSkA';   // Faxina Aloja 9
 const FUN = '1K5xIBsUxgcVW48XSGLplXat0OfjCA8JMvf50RnEGr0A';   // Pelotão Bravo (FUNREBRAVO)
 const ANO = '1pThqWbY11CR697tpHBBwmay680qH5hOysHM0VYDjaOc';   // Anotações Cadetes
@@ -437,7 +437,7 @@ function faxinaDoDia(k) {
   return out;
 }
 // Provas avisadas pela turma que ainda não estão na planilha
-const PROVAS_EXTRA = [{ k: '2026-11-19', sg: 'PSE', ini: '13:30' }];
+const PROVAS_EXTRA = [];
 // Aulas do dia (mesmas para todos)
 function aulasDia(k) {
   let rows = [];
