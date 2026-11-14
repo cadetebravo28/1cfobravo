@@ -7,7 +7,7 @@
 const USUARIO = 'COLOQUE_O_USUARIO';
 const SENHA   = 'COLOQUE_A_SENHA';
 const ADMIN   = 'COLOQUE_A_SENHA_DE_MODERACAO';   // senha de moderação do mural
-const ESC = '1Fll0Q0Vt--jNqC1awyE2A-7JpKZcUhnpCBy-ghPPH1k';   // Escala Aspirantes 2028
+const ESC = '1e-rdIZ-7FmEV1dfCrREXqNWEykaxefdZeWRPv_6eCLY';   // Escala Aspirantes 2028
 const CFO = '13dzAllifFI5G-VubRGK3OM2WlN9qVyJgUma0JhwxyC4';   // 1º CFO BM 2026 - BRAVO
 const FX9 = '1qfS_bQqVxjGjfUHP9abjqmwg6pU9F0XgP7adtdvqSkA';   // Faxina Aloja 9
 const FUN = '1K5xIBsUxgcVW48XSGLplXat0OfjCA8JMvf50RnEGr0A';   // Pelotão Bravo (FUNREBRAVO)
