@@ -1,5 +1,5 @@
 {
- "atualizado": "2026-11-08",
+ "atualizado": "2026-11-15",
  "semanas": [
   {
    "ini": "2026-11-08",
@@ -276,6 +276,287 @@
         "n": "Dias",
         "ano": "1",
         "nr": null
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "ini": "2026-11-15",
+   "fim": "2026-11-22",
+   "cias": [
+    {
+     "nome": "1ª Cia ABMPR",
+     "linhas": [
+      {
+       "f": "Comandante de BTL",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Ataíde",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": {
+        "p": "Al. Oficial BM",
+        "n": "Toth",
+        "ano": "CHOE",
+        "nr": null
+       }
+      },
+      {
+       "f": "Subcomandante de BTL",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Andreoli",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": {
+        "p": "Al. Oficial BM",
+        "n": "Patrício",
+        "ano": "CHOE",
+        "nr": null
+       }
+      },
+      {
+       "f": "Of. de Informação",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Camila",
+        "ano": "1",
+        "nr": 1012
+       },
+       "sup": null
+      },
+      {
+       "f": "Comandante de Cia",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Jéssica",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": {
+        "p": "Al. Oficial BM",
+        "n": "Colares",
+        "ano": "CHOE",
+        "nr": null
+       }
+      },
+      {
+       "f": "Cmd. 1º CFO Bravo",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Pizzatto",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": {
+        "p": "Al. Oficial BM",
+        "n": "Mello",
+        "ano": "CHOE",
+        "nr": null
+       }
+      },
+      {
+       "f": "Chefe de Turma 1º CFO Bravo",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Alef",
+        "ano": "1",
+        "nr": 1002
+       },
+       "sup": null
+      },
+      {
+       "f": "Bedel 1º CFO Bravo",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Rocha",
+        "ano": "1",
+        "nr": 1004
+       },
+       "sup": null
+      },
+      {
+       "f": "Cmd. 1º CFO Alfa",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Uhmann",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": {
+        "p": "Al. Oficial BM",
+        "n": "Aécio",
+        "ano": "CHOE",
+        "nr": null
+       }
+      },
+      {
+       "f": "Chefe de Turma 1º CFO Alfa",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Galvão",
+        "ano": "1",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Bedel 1º CFO Alfa",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Alexsandro",
+        "ano": "1",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Chefe de Turma CHOE",
+       "tit": {
+        "p": "Al. Oficial BM",
+        "n": "Moreira",
+        "ano": "CHOE",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Bedel CHOE",
+       "tit": {
+        "p": "Al. Oficial BM",
+        "n": "Koerich",
+        "ano": "CHOE",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Chefe de Turma 3º CFO",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Elisa",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Bedel 3º CFO",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Teixeira",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": null
+      }
+     ]
+    },
+    {
+     "nome": "2ª Cia ABMPR",
+     "linhas": [
+      {
+       "f": "Comandante de Cia",
+       "tit": {
+        "p": "Cad. 3º BM",
+        "n": "Luana",
+        "ano": "3",
+        "nr": null
+       },
+       "sup": null
+      },
+      {
+       "f": "Suplente Cmd. de Cia",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Rebecca",
+        "ano": "1",
+        "nr": 1039
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "Rebecca",
+        "ano": "1",
+        "nr": 1039
+       }
+      },
+      {
+       "f": "Cmd. CFP Echo",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Keven",
+        "ano": "1",
+        "nr": 1049
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "Cruz",
+        "ano": "1",
+        "nr": null
+       }
+      },
+      {
+       "f": "Cmd. CFP Delta",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Moreira",
+        "ano": "1",
+        "nr": 1052
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "Paola",
+        "ano": "1",
+        "nr": 1033
+       }
+      },
+      {
+       "f": "Cmd. CFP Charlie",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Luciano",
+        "ano": "1",
+        "nr": null
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "Bonfim",
+        "ano": "1",
+        "nr": 1006
+       }
+      },
+      {
+       "f": "Cmd. CFP Bravo",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Vaccari",
+        "ano": "1",
+        "nr": null
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "André",
+        "ano": "1",
+        "nr": 1009
+       }
+      },
+      {
+       "f": "Cmd. CFP Alfa",
+       "tit": {
+        "p": "Cad. 1º BM",
+        "n": "Dias",
+        "ano": "1",
+        "nr": null
+       },
+       "sup": {
+        "p": "Cad. 1º BM",
+        "n": "Stelmack",
+        "ano": "1",
+        "nr": 1011
        }
       }
      ]
