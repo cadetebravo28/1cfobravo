@@ -1646,14 +1646,14 @@ document.querySelectorAll("#an-af .fbtn").forEach(b=>b.onclick=()=>{AN.alvo=b.da
 document.querySelectorAll("#an-f .fbtn").forEach(b=>b.onclick=()=>{AN.pel=b.dataset.p;document.querySelectorAll("#an-af .fbtn").forEach(b=>b.onclick=()=>{AN.alvo=b.dataset.a;document.querySelectorAll("#an-af .fbtn").forEach(x=>x.setAttribute("aria-pressed",x===b));renderTop();});
 document.querySelectorAll("#an-f .fbtn").forEach(x=>x.setAttribute("aria-pressed",x===b));renderAnot();});
 
-/* ===== Faxina do alojamento (escala de limpeza, novembro/2026) ===== */
-const FAX8={"2026-11-03":"Retexin","2026-11-04":"Chepiloski","2026-11-05":"Gerlach","2026-11-06":"Spak","2026-11-09":"Retexin","2026-11-10":"Chepiloski","2026-11-11":"Gerlach","2026-11-12":"Spak","2026-11-13":"Douglas","2026-11-16":"Retexin","2026-11-17":"Chepiloski","2026-11-18":"Gerlach","2026-11-19":"Spak","2026-11-23":"Douglas","2026-11-24":"Stelmack","2026-11-25":"Retexin","2026-11-26":"Chepiloski","2026-11-27":"Gerlach","2026-11-30":"Spak"};
+/* ===== Faxina do alojamento (escala de limpeza, nov–dez/2026) ===== */
+const FAX8={"2026-11-03":"Retexin","2026-11-04":"Chepiloski","2026-11-05":"Gerlach","2026-11-06":"Spak","2026-11-09":"Retexin","2026-11-10":"Chepiloski","2026-11-11":"Gerlach","2026-11-12":"Spak","2026-11-13":"Douglas","2026-11-16":"Retexin","2026-11-17":"Chepiloski","2026-11-18":"Gerlach","2026-11-19":"Spak","2026-11-23":"Douglas","2026-11-24":"Stelmack","2026-11-25":"Retexin","2026-11-26":"Chepiloski","2026-11-27":"Gerlach","2026-11-30":"Spak","2026-12-01":"Stelmack","2026-12-02":"Spak","2026-12-03":"Chepiloski","2026-12-04":"Douglas","2026-12-07":"Spak","2026-12-08":"Stelmack","2026-12-09":"Douglas","2026-12-10":"Retexin","2026-12-11":"Chepiloski","2026-12-14":"Retexin","2026-12-15":"Chepiloski","2026-12-16":"Gerlach","2026-12-17":"Stelmack","2026-12-18":"Douglas","2026-12-21":"Spak","2026-12-22":"Douglas","2026-12-23":"Gerlach","2026-12-24":"Stelmack","2026-12-28":"Gerlach","2026-12-29":"Douglas","2026-12-30":"Stelmack","2026-12-31":"Retexin"};
 const FAX1={"2026-11-03": "Semtchuk", "2026-11-04": "Martini", "2026-11-05": "Semtchuk", "2026-11-06": "Martini", "2026-11-09": "Camila", "2026-11-10": "Rebecca", "2026-11-11": "Fernanda", "2026-11-12": "Ana Paula", "2026-11-13": "Paola", "2026-11-16": "Fernanda", "2026-11-17": "Ana Paula", "2026-11-18": "Camila", "2026-11-19": "Paola", "2026-11-23": "Martini", "2026-11-24": "Camila", "2026-11-25": "Semtchuk", "2026-11-26": "Martini", "2026-11-27": "Fernanda", "2026-11-30": "Paola"};
 let FAXINA=ALOJA===8?FAX8:ALOJA===1?FAX1:{};
 const FAX_TROCA={}, FAX_ATIV={};
-const FAX_FERIADOS={"2026-11-02":"Finados","2026-11-20":"Dia da Consciência Negra"};
+const FAX_FERIADOS={"2026-11-02":"Finados","2026-11-20":"Dia da Consciência Negra","2026-12-25":"Natal"};
 let FAX_CONT=ALOJA!==8?{}:{"Rocha":10,"André":13,"Stelmack":10,"Douglas":10,"Spak":11,"Gerlach":11,"Chepiloski":11,"Retexin":11};
-let FAX_FIM="2026-11-30";
+let FAX_FIM=ALOJA===8?"2026-12-31":"2026-11-30";
 if(ALOJA===1){ FAX_CONT={}; Object.values(FAX1).forEach(n=>FAX_CONT[n]=(FAX_CONT[n]||0)+1); }
 /* Aloja 9: planilha "FAXINA DIÁRIA" (ao vivo / cópia compartilhada) */
 const FAX9_ID="1qfS_bQqVxjGjfUHP9abjqmwg6pU9F0XgP7adtdvqSkA";
